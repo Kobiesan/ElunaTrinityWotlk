@@ -5943,32 +5943,144 @@ float Player::GetLanguageComprehension(Language language) const
     return std::min(static_cast<float>(skillValue) / maxSkillValue, 1.0f);
 }
 
-std::string Player::ScrambleTextByComprehension(std::string_view text, float comprehension) const
+// Blizzlike language syllable word lists (from LanguageWords.dbc)
+// Words are grouped by length for hash-based selection
+namespace LanguageWords
+{
+    // Common language syllables (Language 7)
+    static const char* const CommonWords1[] = { "a", "e", "i", "o", "u", "y" };
+    static const char* const CommonWords2[] = { "an", "ko", "lo", "lu", "me", "ne", "re", "ru", "se", "ti", "va", "ve" };
+    static const char* const CommonWords3[] = { "ash", "bor", "bur", "far", "gol", "hir", "lon", "mos", "nud", "ras", "ver", "vil", "wos" };
+    static const char* const CommonWords4[] = { "ador", "agol", "dana", "goth", "lars", "noth", "nuff", "odes", "ruff", "thor", "uden", "veld", "vohl", "vrum" };
+    static const char* const CommonWords5[] = { "algos", "barad", "borne", "eynes", "ergin", "garde", "gloin", "majis", "melka", "nagan", "novas", "regen", "tiras", "wirsh" };
+    static const char* const CommonWords6[] = { "andune", "aratoi", "dorini", "ealdor", "engoth", "gorath", "lagosh", "landor", "melgar", "modgud", "nogrod", "udinas" };
+    static const char* const CommonWords7[] = { "andovis", "eglatin", "gilliam", "karlain", "landoar", "melanis", "modimus", "nelandr", "thandol", "theraol" };
+
+    // Orcish language syllables (Language 1)
+    static const char* const OrcishWords1[] = { "a", "g", "h", "n", "o", "u", "k", "r" };
+    static const char* const OrcishWords2[] = { "ag", "ak", "ar", "ga", "go", "gu", "ha", "ko", "lo", "me", "no", "og", "re", "ru", "ul", "za", "zg" };
+    static const char* const OrcishWords3[] = { "aga", "ash", "dak", "dor", "gol", "gul", "kaz", "kek", "lok", "mog", "nak", "nuk", "org", "ogg", "rok", "ruk", "tar", "zug", "zur" };
+    static const char* const OrcishWords4[] = { "alok", "dabu", "gesh", "grom", "goth", "karg", "krak", "maka", "mosh", "naga", "nogu", "ogar", "reth", "thok", "throm", "zaga", "zuul" };
+    static const char* const OrcishWords5[] = { "dagor", "gakal", "grish", "gulda", "ka'ag", "kazog", "magan", "nagan", "nazog", "ogron", "thrak", "thruk", "zugor" };
+    static const char* const OrcishWords6[] = { "gashuk", "grommm", "karosh", "loktar", "magorz", "mogash", "nazgul", "throkk", "throgk" };
+    static const char* const OrcishWords7[] = { "gordash", "gul'dan", "lok'tar", "luk'huk", "mag'har", "mor'shan", "nagrand", "orgimok" };
+
+    // Gutterspeak language syllables (Language 33) - similar to Common with some variation
+    static const char* const GutterspeakWords1[] = { "a", "e", "i", "o", "u", "y" };
+    static const char* const GutterspeakWords2[] = { "an", "ko", "lo", "lu", "me", "ne", "re", "ru", "se", "ti", "va", "ve" };
+    static const char* const GutterspeakWords3[] = { "ash", "bor", "bur", "far", "gol", "hir", "lon", "mos", "nud", "ras", "ver", "vil", "wos" };
+    static const char* const GutterspeakWords4[] = { "ador", "agol", "dana", "goth", "lars", "noth", "nuff", "odes", "ruff", "thor", "uden", "veld" };
+    static const char* const GutterspeakWords5[] = { "algos", "barad", "borne", "eynes", "garde", "gloin", "majis", "melka", "nagan", "novas", "regen" };
+    static const char* const GutterspeakWords6[] = { "andune", "dorini", "ealdor", "engoth", "gorath", "lagosh", "modgud", "nogrod", "udinas" };
+    static const char* const GutterspeakWords7[] = { "andovis", "eglatin", "gilliam", "karlain", "melanis", "modimus", "nelandr", "thandol" };
+
+    // Helper function that selects a word from an array using hash-based indexing
+    // This ensures the same input word always produces the same translated word
+    template<size_t N>
+    const char* SelectWord(const char* const (&words)[N], size_t hash)
+    {
+        return words[hash % N];
+    }
+}
+
+std::string Player::TranslateWordToLanguage(std::string_view word, Language language)
+{
+    if (word.empty())
+        return std::string();
+
+    size_t len = word.size();
+    
+    // Generate a deterministic hash from the word
+    size_t hash = 0;
+    for (char c : word)
+    {
+        hash = hash * 31 + static_cast<unsigned char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+
+    std::string result;
+    bool capitalize = !word.empty() && std::isupper(static_cast<unsigned char>(word[0]));
+
+    // Select words based on language and length
+    switch (language)
+    {
+        case LANG_ORCISH:
+        {
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::OrcishWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::OrcishWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::OrcishWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::OrcishWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::OrcishWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::OrcishWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::OrcishWords1, hash);
+            break;
+        }
+        case LANG_GUTTERSPEAK:
+        {
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords1, hash);
+            break;
+        }
+        case LANG_COMMON:
+        default:
+        {
+            // Common is used as fallback for other languages as well
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::CommonWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::CommonWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::CommonWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::CommonWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::CommonWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::CommonWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::CommonWords1, hash);
+            break;
+        }
+    }
+
+    // Capitalize first letter if original was capitalized
+    if (capitalize && !result.empty())
+    {
+        result[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(result[0])));
+    }
+
+    return result;
+}
+
+std::string Player::ScrambleTextByComprehension(std::string_view text, float comprehension, Language language) const
 {
     // Full comprehension - return original text
     if (comprehension >= 1.0f)
         return std::string(text);
 
-    // No comprehension - scramble everything
-    if (comprehension <= 0.0f)
-    {
-        std::string result;
-        result.reserve(text.size());
-        for (char c : text)
-        {
-            if (std::isspace(static_cast<unsigned char>(c)))
-                result += c;
-            else if (std::isalpha(static_cast<unsigned char>(c)))
-                result += (std::isupper(static_cast<unsigned char>(c)) ? 'X' : 'x');
-            else
-                result += c;
-        }
-        return result;
-    }
-
-    // Partial comprehension - reveal words based on comprehension percentage
+    // Process text word by word using Blizzlike translation
     std::string result;
-    result.reserve(text.size());
+    // Reserve extra space since translated words may differ in length from originals
+    constexpr size_t BUFFER_MULTIPLIER = 2;
+    result.reserve(text.size() * BUFFER_MULTIPLIER);
 
     size_t wordStart = 0;
     bool inWord = false;
@@ -5984,28 +6096,33 @@ std::string Player::ScrambleTextByComprehension(std::string_view text, float com
         }
         else if (!isWordChar && inWord)
         {
-            // End of word - decide if we reveal or scramble
+            // End of word - decide if we reveal or translate
             std::string_view word = text.substr(wordStart, i - wordStart);
 
-            // Use a simple deterministic method based on word position and comprehension
-            // This ensures the same words are revealed/scrambled consistently
-            // Using prime-like multipliers for better distribution
-            constexpr uint32 POSITION_MULTIPLIER = 31;
-            constexpr uint32 LENGTH_MULTIPLIER = 17;
-            constexpr float THRESHOLD_DIVISOR = 100.0f;
-            float threshold = static_cast<float>((wordStart * POSITION_MULTIPLIER + word.size() * LENGTH_MULTIPLIER) % 100) / THRESHOLD_DIVISOR;
-
-            if (threshold < comprehension)
+            if (comprehension <= 0.0f)
             {
-                // Reveal this word
-                result += word;
+                // No comprehension - translate everything using Blizzlike words
+                result += TranslateWordToLanguage(word, language);
             }
             else
             {
-                // Scramble this word
-                for (char c : word)
+                // Partial comprehension - reveal or translate based on threshold
+                // Prime-like multipliers provide good hash distribution across word positions
+                constexpr uint32 POSITION_MULTIPLIER = 31;
+                constexpr uint32 LENGTH_MULTIPLIER = 17;
+                // Threshold is calculated as a percentage (0.0 to 1.0) for comparison with comprehension
+                constexpr float THRESHOLD_DIVISOR = 100.0f;
+                float threshold = static_cast<float>((wordStart * POSITION_MULTIPLIER + word.size() * LENGTH_MULTIPLIER) % 100) / THRESHOLD_DIVISOR;
+
+                if (threshold < comprehension)
                 {
-                    result += (std::isupper(static_cast<unsigned char>(c)) ? 'X' : 'x');
+                    // Reveal this word
+                    result += word;
+                }
+                else
+                {
+                    // Translate this word using Blizzlike language words
+                    result += TranslateWordToLanguage(word, language);
                 }
             }
 
@@ -20752,7 +20869,7 @@ void Player::Say(std::string_view text, Language language, WorldObject const* /*
                 continue;
 
             float comprehension = player->GetLanguageComprehension(language);
-            std::string customText = player->ScrambleTextByComprehension(_text, comprehension);
+            std::string customText = player->ScrambleTextByComprehension(_text, comprehension, language);
 
             // If fully comprehended, send as universal so client shows original text
             // If not fully comprehended, send as original language with scrambled text
@@ -20804,7 +20921,7 @@ void Player::Yell(std::string_view text, Language language, WorldObject const* /
                 continue;
 
             float comprehension = player->GetLanguageComprehension(language);
-            std::string customText = player->ScrambleTextByComprehension(_text, comprehension);
+            std::string customText = player->ScrambleTextByComprehension(_text, comprehension, language);
 
             // If fully comprehended, send as universal so client shows original text
             // If not fully comprehended, send as original language with scrambled text
