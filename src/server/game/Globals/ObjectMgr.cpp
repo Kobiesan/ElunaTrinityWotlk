@@ -10360,6 +10360,20 @@ PlayerInfo const* ObjectMgr::GetPlayerInfo(uint32 race, uint32 class_) const
     return info.get();
 }
 
+PlayerInfo const* ObjectMgr::GetPlayerInfoForRace(uint32 race) const
+{
+    if (race >= MAX_RACES)
+        return nullptr;
+    // Return any valid PlayerInfo for this race
+    for (uint32 class_ = 0; class_ < MAX_CLASSES; ++class_)
+    {
+        auto const& info = _playerInfo[race][class_];
+        if (info)
+            return info.get();
+    }
+    return nullptr;
+}
+
 void ObjectMgr::LoadGameObjectQuestItems()
 {
     uint32 oldMSTime = getMSTime();

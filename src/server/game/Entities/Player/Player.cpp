@@ -395,9 +395,17 @@ bool Player::Create(ObjectGuid::LowType guidlow, CharacterCreateInfo* createInfo
     PlayerInfo const* info = sObjectMgr->GetPlayerInfo(createInfo->Race, createInfo->Class);
     if (!info)
     {
-        TC_LOG_ERROR("entities.player.cheat", "Player::Create: Possible hacking attempt: Account {} tried to create a character named '{}' with an invalid race/class pair ({}/{}) - refusing to do so.",
-                GetSession()->GetAccountId(), m_name, createInfo->Race, createInfo->Class);
-        return false;
+        // If the class was unlocked by reaching max level, use fallback PlayerInfo for the race
+        if (createInfo->ClassUnlockedByMaxLevel)
+        {
+            info = sObjectMgr->GetPlayerInfoForRace(createInfo->Race);
+        }
+        if (!info)
+        {
+            TC_LOG_ERROR("entities.player.cheat", "Player::Create: Possible hacking attempt: Account {} tried to create a character named '{}' with an invalid race/class pair ({}/{}) - refusing to do so.",
+                    GetSession()->GetAccountId(), m_name, createInfo->Race, createInfo->Class);
+            return false;
+        }
     }
 
     for (uint8 i = 0; i < PLAYER_SLOTS_COUNT; i++)
@@ -21469,6 +21477,11 @@ void Player::InitDataForForm(bool reapplyMods)
 void Player::InitDisplayIds()
 {
     PlayerInfo const* info = sObjectMgr->GetPlayerInfo(GetRace(), GetClass());
+    if (!info)
+    {
+        // Fallback: try to get PlayerInfo for any class of this race (for unlocked race/class combos)
+        info = sObjectMgr->GetPlayerInfoForRace(GetRace());
+    }
     if (!info)
     {
         TC_LOG_ERROR("entities.player", "Player::InitDisplayIds: Player '{}' ({}) has incorrect race/class pair. Can't init display ids.", GetName(), GetGUID().ToString());
