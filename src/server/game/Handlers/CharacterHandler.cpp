@@ -458,7 +458,11 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
         bool allowTwoSideAccounts = !sWorld->IsPvPRealm() || HasPermission(rbac::RBAC_PERM_TWO_SIDE_CHARACTER_CREATION);
         uint32 skipCinematics = sWorld->getIntConfig(CONFIG_SKIP_CINEMATICS);
 
-        std::function<void(PreparedQueryResult)> finalizeCharacterCreation = [this, createInfo](PreparedQueryResult result)
+        // Check if this race/class combo needs unlocking via max level
+        bool needsClassUnlock = !sObjectMgr->GetPlayerInfo(createInfo->Race, createInfo->Class) &&
+                                sObjectMgr->GetPlayerInfoForRace(createInfo->Race);
+
+        std::function<void(PreparedQueryResult)> finalizeCharacterCreation = [this, createInfo, needsClassUnlock](PreparedQueryResult result)
         {
             bool haveSameRace = false;
             uint32 deathKnightReqLevel = sWorld->getIntConfig(CONFIG_CHARACTER_CREATING_MIN_LEVEL_FOR_DEATH_KNIGHT);
@@ -466,6 +470,8 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
             bool allowTwoSideAccounts = !sWorld->IsPvPRealm() || HasPermission(rbac::RBAC_PERM_TWO_SIDE_CHARACTER_CREATION);
             uint32 skipCinematics = sWorld->getIntConfig(CONFIG_SKIP_CINEMATICS);
             bool checkDeathKnightReqs = createInfo->Class == CLASS_DEATH_KNIGHT && !HasPermission(rbac::RBAC_PERM_SKIP_CHECK_CHARACTER_CREATION_DEATH_KNIGHT);
+            uint8 maxPlayerLevel = uint8(sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL));
+            bool hasMaxLevelClassUnlock = false;
 
             if (result)
             {
@@ -498,6 +504,15 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
                     }
                 }
 
+                // Check for max level class unlock
+                if (needsClassUnlock && !hasMaxLevelClassUnlock)
+                {
+                    uint8 accLevel = field[0].GetUInt8();
+                    uint8 accClass = field[2].GetUInt8();
+                    if (accLevel >= maxPlayerLevel && accClass == createInfo->Class)
+                        hasMaxLevelClassUnlock = true;
+                }
+
                 // need to check team only for first character
                 /// @todo what to if account already has characters of both races?
                 if (!allowTwoSideAccounts)
@@ -515,7 +530,7 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
 
                 // search same race for cinematic or same class if need
                 /// @todo check if cinematic already shown? (already logged in?; cinematic field)
-                while ((skipCinematics == 1 && !haveSameRace) || createInfo->Class == CLASS_DEATH_KNIGHT)
+                while ((skipCinematics == 1 && !haveSameRace) || createInfo->Class == CLASS_DEATH_KNIGHT || (needsClassUnlock && !hasMaxLevelClassUnlock))
                 {
                     if (!result->NextRow())
                         break;
@@ -548,6 +563,15 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
                                 hasDeathKnightReqLevel = true;
                         }
                     }
+
+                    // Check for max level class unlock
+                    if (needsClassUnlock && !hasMaxLevelClassUnlock)
+                    {
+                        uint8 acc_level = field[0].GetUInt8();
+                        uint8 acc_class = field[2].GetUInt8();
+                        if (acc_level >= maxPlayerLevel && acc_class == createInfo->Class)
+                            hasMaxLevelClassUnlock = true;
+                    }
                 }
             }
 
@@ -555,6 +579,21 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
             {
                 SendCharCreate(CHAR_CREATE_LEVEL_REQUIREMENT);
                 return;
+            }
+
+            // If this race/class combo needs unlocking, verify the player has a max-level character of this class
+            if (needsClassUnlock && !hasMaxLevelClassUnlock)
+            {
+                TC_LOG_DEBUG("network", "Account {} tried to create character with race/class ({}/{}) but doesn't have a max-level character of that class",
+                    GetAccountId(), createInfo->Race, createInfo->Class);
+                SendCharCreate(CHAR_CREATE_LEVEL_REQUIREMENT);
+                return;
+            }
+
+            // Set the flag so Player::Create knows to use fallback PlayerInfo
+            if (needsClassUnlock && hasMaxLevelClassUnlock)
+            {
+                createInfo->ClassUnlockedByMaxLevel = true;
             }
 
             // Check name uniqueness in the same step as saving to database
@@ -612,7 +651,8 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
             });
         };
 
-        if (allowTwoSideAccounts && !skipCinematics && createInfo->Class != CLASS_DEATH_KNIGHT)
+        // Skip the query only if we don't need to check for anything
+        if (allowTwoSideAccounts && !skipCinematics && createInfo->Class != CLASS_DEATH_KNIGHT && !needsClassUnlock)
         {
             finalizeCharacterCreation(PreparedQueryResult(nullptr));
             return;
@@ -620,7 +660,8 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
 
         CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAR_CREATE_INFO);
         stmt->setUInt32(0, GetAccountId());
-        stmt->setUInt32(1, (skipCinematics == 1 || createInfo->Class == CLASS_DEATH_KNIGHT) ? 10 : 1);
+        // If we need to check for class unlock, query all characters (limit 10 should be enough for most cases)
+        stmt->setUInt32(1, (skipCinematics == 1 || createInfo->Class == CLASS_DEATH_KNIGHT || needsClassUnlock) ? 10 : 1);
         queryCallback.WithPreparedCallback(std::move(finalizeCharacterCreation)).SetNextQuery(CharacterDatabase.AsyncQuery(stmt));
     }));
 }

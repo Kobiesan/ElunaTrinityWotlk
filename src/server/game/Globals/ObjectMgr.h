@@ -1008,6 +1008,7 @@ class TC_GAME_API ObjectMgr
         void GetPlayerClassLevelInfo(uint32 class_, uint8 level, PlayerClassLevelInfo* info) const;
 
         PlayerInfo const* GetPlayerInfo(uint32 race, uint32 class_) const;
+        PlayerInfo const* GetPlayerInfoForRace(uint32 race) const;
 
         void GetPlayerLevelInfo(uint32 race, uint32 class_, uint8 level, PlayerLevelInfo* info) const;
 
