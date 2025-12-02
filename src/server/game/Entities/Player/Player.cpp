@@ -5989,7 +5989,11 @@ std::string Player::ScrambleTextByComprehension(std::string_view text, float com
 
             // Use a simple deterministic method based on word position and comprehension
             // This ensures the same words are revealed/scrambled consistently
-            float threshold = static_cast<float>((wordStart * 31 + word.size() * 17) % 100) / 100.0f;
+            // Using prime-like multipliers for better distribution
+            constexpr uint32 POSITION_MULTIPLIER = 31;
+            constexpr uint32 LENGTH_MULTIPLIER = 17;
+            constexpr float THRESHOLD_DIVISOR = 100.0f;
+            float threshold = static_cast<float>((wordStart * POSITION_MULTIPLIER + word.size() * LENGTH_MULTIPLIER) % 100) / THRESHOLD_DIVISOR;
 
             if (threshold < comprehension)
             {
@@ -20728,14 +20732,14 @@ void Player::Say(std::string_view text, Language language, WorldObject const* /*
 
     float range = sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_SAY);
 
-    // Send original message to self
-    WorldPacket dataSelf;
-    ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_SAY, language, this, this, _text);
-    SendDirectMessage(&dataSelf);
-
     // For languages other than universal, customize message for each receiver based on comprehension
     if (language != LANG_UNIVERSAL && language != LANG_ADDON)
     {
+        // Send original message to self
+        WorldPacket dataSelf;
+        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_SAY, language, this, this, _text);
+        SendDirectMessage(&dataSelf);
+
         std::list<Player*> players;
         GetPlayerListInGrid(players, range);
 
@@ -20761,10 +20765,10 @@ void Player::Say(std::string_view text, Language language, WorldObject const* /*
     }
     else
     {
-        // Universal language - send normally
+        // Universal language - send normally to all including self
         WorldPacket data;
         ChatHandler::BuildChatPacket(data, CHAT_MSG_SAY, language, this, this, _text);
-        SendMessageToSetInRange(&data, range, false, false, true);
+        SendMessageToSetInRange(&data, range, true, false, true);
     }
 }
 
@@ -20780,14 +20784,14 @@ void Player::Yell(std::string_view text, Language language, WorldObject const* /
 
     float range = sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_YELL);
 
-    // Send original message to self
-    WorldPacket dataSelf;
-    ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_YELL, language, this, this, _text);
-    SendDirectMessage(&dataSelf);
-
     // For languages other than universal, customize message for each receiver based on comprehension
     if (language != LANG_UNIVERSAL && language != LANG_ADDON)
     {
+        // Send original message to self
+        WorldPacket dataSelf;
+        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_YELL, language, this, this, _text);
+        SendDirectMessage(&dataSelf);
+
         std::list<Player*> players;
         GetPlayerListInGrid(players, range);
 
@@ -20813,10 +20817,10 @@ void Player::Yell(std::string_view text, Language language, WorldObject const* /
     }
     else
     {
-        // Universal language - send normally
+        // Universal language - send normally to all including self
         WorldPacket data;
         ChatHandler::BuildChatPacket(data, CHAT_MSG_YELL, language, this, this, _text);
-        SendMessageToSetInRange(&data, range, false, false, true);
+        SendMessageToSetInRange(&data, range, true, false, true);
     }
 }
 
