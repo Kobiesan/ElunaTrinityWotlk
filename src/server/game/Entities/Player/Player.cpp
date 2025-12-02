@@ -21494,7 +21494,7 @@ void Player::InitDisplayIds()
     PlayerInfo const* info = sObjectMgr->GetPlayerInfo(GetRace(), GetClass());
     if (!info)
     {
-        // Fallback: try to get PlayerInfo for any class of this race (for unlocked race/class combos)
+        // Try fallback for unlocked race/class combos
         info = sObjectMgr->GetPlayerInfoForRace(GetRace());
     }
     if (!info)

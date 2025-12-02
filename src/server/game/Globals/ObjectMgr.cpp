@@ -10364,7 +10364,7 @@ PlayerInfo const* ObjectMgr::GetPlayerInfoForRace(uint32 race) const
 {
     if (race >= MAX_RACES)
         return nullptr;
-    // Return any valid PlayerInfo for this race
+    // Return the first valid PlayerInfo found for this race
     for (uint32 class_ = 0; class_ < MAX_CLASSES; ++class_)
     {
         auto const& info = _playerInfo[race][class_];
