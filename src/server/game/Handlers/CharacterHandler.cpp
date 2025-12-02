@@ -584,7 +584,9 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
             // If this race/class combo needs unlocking, verify the player has a max-level character of this class
             if (needsClassUnlock && !hasMaxLevelClassUnlock)
             {
-                SendCharCreate(CHAR_CREATE_FAILED);
+                TC_LOG_DEBUG("network", "Account {} tried to create character with race/class ({}/{}) but doesn't have a max-level character of that class",
+                    GetAccountId(), createInfo->Race, createInfo->Class);
+                SendCharCreate(CHAR_CREATE_LEVEL_REQUIREMENT);
                 return;
             }
 
