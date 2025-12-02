@@ -599,9 +599,9 @@ uint8 ArenaTeam::GetSlotByType(uint32 type)
 {
     switch (type)
     {
-        case ARENA_TEAM_2v2: return 0;
-        case ARENA_TEAM_3v3: return 1;
-        case ARENA_TEAM_5v5: return 2;
+        case ARENA_TEAM_1v1: return 0;
+        case ARENA_TEAM_2v2: return 1;
+        case ARENA_TEAM_3v3: return 2;
         default:
             break;
     }
@@ -613,9 +613,9 @@ uint8 ArenaTeam::GetTypeBySlot(uint8 slot)
 {
     switch (slot)
     {
-        case 0: return ARENA_TEAM_2v2;
-        case 1: return ARENA_TEAM_3v3;
-        case 2: return ARENA_TEAM_5v5;
+        case 0: return ARENA_TEAM_1v1;
+        case 1: return ARENA_TEAM_2v2;
+        case 2: return ARENA_TEAM_3v3;
         default:
             break;
     }
@@ -649,8 +649,10 @@ uint32 ArenaTeam::GetPoints(uint32 memberRating)
     else
         points = 1511.26f / (1.0f + 1639.28f * std::exp(-0.00412f * float(rating)));
 
-    // Type penalties for teams < 5v5
-    if (Type == ARENA_TEAM_2v2)
+    // Type penalties for teams < 3v3
+    if (Type == ARENA_TEAM_1v1)
+        points *= 0.64f;
+    else if (Type == ARENA_TEAM_2v2)
         points *= 0.76f;
     else if (Type == ARENA_TEAM_3v3)
         points *= 0.88f;
