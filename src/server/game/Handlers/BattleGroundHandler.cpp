@@ -485,7 +485,7 @@ void WorldSession::HandleRequestBattlefieldStatusOpcode(WorldPackets::Battlegrou
             BattlegroundPlayer const* bgPlayer = bg->GetBattlegroundPlayerData(_player->GetGUID());
             if (bgPlayer)
             {
-                //i cannot check any variable from player class because player class doesn't know if player is in 2v2 / 3v3 or 5v5 arena
+                //i cannot check any variable from player class because player class doesn't know if player is in 1v1 / 2v2 or 3v3 arena
                 //so i must use bg pointer to get that information
                 WorldPackets::Battleground::BattlefieldStatusActive battlefieldStatus;
                 BattlegroundMgr::BuildBattlegroundStatusActive(&battlefieldStatus, bg, _player, i, bgQueueTypeId);

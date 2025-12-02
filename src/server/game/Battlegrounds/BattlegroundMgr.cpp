@@ -139,7 +139,7 @@ void BattlegroundMgr::Update(uint32 diff)
         {
             // forced update for rated arenas (scan all, but skipped non rated)
             TC_LOG_TRACE("bg.arena", "BattlegroundMgr: UPDATING ARENA QUEUES");
-            for (uint8 teamSize : { ARENA_TYPE_2v2, ARENA_TYPE_3v3, ARENA_TYPE_5v5 })
+            for (uint8 teamSize : { ARENA_TYPE_1v1, ARENA_TYPE_2v2, ARENA_TYPE_3v3 })
             {
                 for (int bracket = BG_BRACKET_ID_FIRST; bracket < MAX_BATTLEGROUND_BRACKETS; ++bracket)
                 {
@@ -401,14 +401,14 @@ Battleground* BattlegroundMgr::CreateNewBattleground(BattlegroundTypeId original
         uint32 maxPlayersPerTeam = 0;
         switch (arenaType)
         {
+            case ARENA_TYPE_1v1:
+                maxPlayersPerTeam = 1;
+                break;
             case ARENA_TYPE_2v2:
                 maxPlayersPerTeam = 2;
                 break;
             case ARENA_TYPE_3v3:
                 maxPlayersPerTeam = 3;
-                break;
-            case ARENA_TYPE_5v5:
-                maxPlayersPerTeam = 5;
                 break;
         }
 
