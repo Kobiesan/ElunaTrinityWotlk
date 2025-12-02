@@ -43,6 +43,7 @@
 #include "DatabaseEnv.h"
 #include "DisableMgr.h"
 #include "Formulas.h"
+#include <cctype>
 #include "GameClient.h"
 #include "GameEventMgr.h"
 #include "GameObjectAI.h"
@@ -5909,6 +5910,110 @@ bool Player::HasSkill(uint32 skill) const
 
     SkillStatusMap::const_iterator itr = mSkillStatus.find(skill);
     return (itr != mSkillStatus.end() && itr->second.uState != SKILL_DELETED);
+}
+
+float Player::GetLanguageComprehension(Language language) const
+{
+    // Universal language is always understood
+    if (language == LANG_UNIVERSAL || language == LANG_ADDON)
+        return 1.0f;
+
+    // Get the skill ID for the language
+    LanguageDesc const* langDesc = GetLanguageDescByID(language);
+    if (!langDesc || langDesc->skill_id == 0)
+        return 0.0f;
+
+    // Check for SPELL_AURA_COMPREHEND_LANGUAGE - grants full comprehension
+    Unit::AuraEffectList const& langAuras = GetAuraEffectsByType(SPELL_AURA_COMPREHEND_LANGUAGE);
+    for (Unit::AuraEffectList::const_iterator i = langAuras.begin(); i != langAuras.end(); ++i)
+    {
+        if ((*i)->GetMiscValue() == int32(language))
+            return 1.0f;
+    }
+
+    // Get the player's skill value for this language
+    uint16 skillValue = GetSkillValue(langDesc->skill_id);
+    if (skillValue == 0)
+        return 0.0f;
+
+    // Language skills max at 300 (SKILL_RANGE_LANGUAGE)
+    const float maxSkillValue = 300.0f;
+
+    // Calculate comprehension as a percentage of max skill
+    return std::min(static_cast<float>(skillValue) / maxSkillValue, 1.0f);
+}
+
+std::string Player::ScrambleTextByComprehension(std::string_view text, float comprehension) const
+{
+    // Full comprehension - return original text
+    if (comprehension >= 1.0f)
+        return std::string(text);
+
+    // No comprehension - scramble everything
+    if (comprehension <= 0.0f)
+    {
+        std::string result;
+        result.reserve(text.size());
+        for (char c : text)
+        {
+            if (std::isspace(static_cast<unsigned char>(c)))
+                result += c;
+            else if (std::isalpha(static_cast<unsigned char>(c)))
+                result += (std::isupper(static_cast<unsigned char>(c)) ? 'X' : 'x');
+            else
+                result += c;
+        }
+        return result;
+    }
+
+    // Partial comprehension - reveal words based on comprehension percentage
+    std::string result;
+    result.reserve(text.size());
+
+    size_t wordStart = 0;
+    bool inWord = false;
+
+    for (size_t i = 0; i <= text.size(); ++i)
+    {
+        bool isWordChar = (i < text.size()) && std::isalpha(static_cast<unsigned char>(text[i]));
+
+        if (isWordChar && !inWord)
+        {
+            wordStart = i;
+            inWord = true;
+        }
+        else if (!isWordChar && inWord)
+        {
+            // End of word - decide if we reveal or scramble
+            std::string_view word = text.substr(wordStart, i - wordStart);
+
+            // Use a simple deterministic method based on word position and comprehension
+            // This ensures the same words are revealed/scrambled consistently
+            float threshold = static_cast<float>((wordStart * 31 + word.size() * 17) % 100) / 100.0f;
+
+            if (threshold < comprehension)
+            {
+                // Reveal this word
+                result += word;
+            }
+            else
+            {
+                // Scramble this word
+                for (char c : word)
+                {
+                    result += (std::isupper(static_cast<unsigned char>(c)) ? 'X' : 'x');
+                }
+            }
+
+            inWord = false;
+        }
+
+        // Add non-word characters directly
+        if (!isWordChar && i < text.size())
+            result += text[i];
+    }
+
+    return result;
 }
 
 uint16 Player::GetSkillStep(uint32 skill) const
@@ -20621,9 +20726,46 @@ void Player::Say(std::string_view text, Language language, WorldObject const* /*
     std::string _text(text);
     sScriptMgr->OnPlayerChat(this, CHAT_MSG_SAY, language, _text);
 
-    WorldPacket data;
-    ChatHandler::BuildChatPacket(data, CHAT_MSG_SAY, language, this, this, _text);
-    SendMessageToSetInRange(&data, sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_SAY), true, false, true);
+    float range = sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_SAY);
+
+    // Send original message to self
+    WorldPacket dataSelf;
+    ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_SAY, language, this, this, _text);
+    SendDirectMessage(&dataSelf);
+
+    // For languages other than universal, customize message for each receiver based on comprehension
+    if (language != LANG_UNIVERSAL && language != LANG_ADDON)
+    {
+        std::list<Player*> players;
+        GetPlayerListInGrid(players, range);
+
+        for (Player* player : players)
+        {
+            if (player == this)
+                continue;
+
+            if (!player->HaveAtClient(this))
+                continue;
+
+            float comprehension = player->GetLanguageComprehension(language);
+            std::string customText = player->ScrambleTextByComprehension(_text, comprehension);
+
+            // If fully comprehended, send as universal so client shows original text
+            // If not fully comprehended, send as original language with scrambled text
+            Language sendLang = (comprehension >= 1.0f) ? LANG_UNIVERSAL : language;
+
+            WorldPacket data;
+            ChatHandler::BuildChatPacket(data, CHAT_MSG_SAY, sendLang, this, this, customText);
+            player->SendDirectMessage(&data);
+        }
+    }
+    else
+    {
+        // Universal language - send normally
+        WorldPacket data;
+        ChatHandler::BuildChatPacket(data, CHAT_MSG_SAY, language, this, this, _text);
+        SendMessageToSetInRange(&data, range, false, false, true);
+    }
 }
 
 void Player::Say(uint32 textId, WorldObject const* target /*= nullptr*/)
@@ -20636,9 +20778,46 @@ void Player::Yell(std::string_view text, Language language, WorldObject const* /
     std::string _text(text);
     sScriptMgr->OnPlayerChat(this, CHAT_MSG_YELL, language, _text);
 
-    WorldPacket data;
-    ChatHandler::BuildChatPacket(data, CHAT_MSG_YELL, language, this, this, _text);
-    SendMessageToSetInRange(&data, sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_YELL), true, false, true);
+    float range = sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_YELL);
+
+    // Send original message to self
+    WorldPacket dataSelf;
+    ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_YELL, language, this, this, _text);
+    SendDirectMessage(&dataSelf);
+
+    // For languages other than universal, customize message for each receiver based on comprehension
+    if (language != LANG_UNIVERSAL && language != LANG_ADDON)
+    {
+        std::list<Player*> players;
+        GetPlayerListInGrid(players, range);
+
+        for (Player* player : players)
+        {
+            if (player == this)
+                continue;
+
+            if (!player->HaveAtClient(this))
+                continue;
+
+            float comprehension = player->GetLanguageComprehension(language);
+            std::string customText = player->ScrambleTextByComprehension(_text, comprehension);
+
+            // If fully comprehended, send as universal so client shows original text
+            // If not fully comprehended, send as original language with scrambled text
+            Language sendLang = (comprehension >= 1.0f) ? LANG_UNIVERSAL : language;
+
+            WorldPacket data;
+            ChatHandler::BuildChatPacket(data, CHAT_MSG_YELL, sendLang, this, this, customText);
+            player->SendDirectMessage(&data);
+        }
+    }
+    else
+    {
+        // Universal language - send normally
+        WorldPacket data;
+        ChatHandler::BuildChatPacket(data, CHAT_MSG_YELL, language, this, this, _text);
+        SendMessageToSetInRange(&data, range, false, false, true);
+    }
 }
 
 void Player::Yell(uint32 textId, WorldObject const* target /*= nullptr*/)
