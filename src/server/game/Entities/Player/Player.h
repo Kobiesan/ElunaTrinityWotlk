@@ -1808,6 +1808,9 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
         int16 GetSkillTempBonusValue(uint32 skill) const;
         uint16 GetSkillStep(uint32 skill) const;            // 0...6
         bool HasSkill(uint32 skill) const;
+        float GetLanguageComprehension(Language language) const;
+        std::string ScrambleTextByComprehension(std::string_view text, float comprehension, Language language) const;
+        static std::string TranslateWordToLanguage(std::string_view word, Language language);
         void LearnSkillRewardedSpells(uint32 skillId, uint32 skillValue);
         uint16 GetSkillLineIdByPos(uint32 pos) const { return GetUInt16Value(PLAYER_SKILL_INFO_1_1 + pos * 3 + SKILL_ID_FIELD_OFFSET, SKILL_ID_SHORT_OFFSET); }
         void SetSkillLineId(uint32 pos, uint16 skillLineId) { SetUInt16Value(PLAYER_SKILL_INFO_1_1 + pos * 3 + SKILL_ID_FIELD_OFFSET, SKILL_ID_SHORT_OFFSET, skillLineId); }
