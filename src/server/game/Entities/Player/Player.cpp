@@ -5957,6 +5957,96 @@ namespace LanguageWords
     static const char* const OrcishWords6[] = { "gashuk", "grommm", "karosh", "loktar", "magorz", "mogash", "nazgul", "throkk", "throgk" };
     static const char* const OrcishWords7[] = { "gordash", "gul'dan", "lok'tar", "luk'huk", "mag'har", "mor'shan", "nagrand", "orgimok" };
 
+    // Darnassian language syllables (Language 2)
+    static const char* const DarnassianWords1[] = { "a", "d", "e", "i", "n", "o" };
+    static const char* const DarnassianWords2[] = { "al", "an", "da", "do", "en", "lo", "na", "ni", "no", "ri", "th" };
+    static const char* const DarnassianWords3[] = { "ala", "ano", "anu", "ash", "dor", "dur", "end", "eth", "fal", "ith", "nar", "nor", "osa", "tal", "tha", "the" };
+    static const char* const DarnassianWords4[] = { "alah", "aman", "anar", "andu", "dath", "diel", "dora", "felo", "mush", "rath", "shar", "shan", "thas", "thus" };
+    static const char* const DarnassianWords5[] = { "adore", "alara", "balah", "ishnu", "manag", "mush'a", "shari", "talah", "thera", "thero" };
+    static const char* const DarnassianWords6[] = { "ashala", "dorini", "falore", "ishura", "neph'o", "shando", "thero'shan" };
+    static const char* const DarnassianWords7[] = { "al'aman", "asto're", "fala'na", "ishnu'alah", "shan'do", "thero'shan", "thoribas" };
+
+    // Taurahe language syllables (Language 3)
+    static const char* const TauraheWords1[] = { "a", "e", "i", "o", "u", "n" };
+    static const char* const TauraheWords2[] = { "ah", "an", "ba", "he", "ko", "lo", "me", "mu", "na", "no", "po", "ta", "to", "wa" };
+    static const char* const TauraheWords3[] = { "alo", "apa", "awa", "chu", "esh", "hao", "min", "owa", "pak", "sho", "shu", "sno", "wal", "wao" };
+    static const char* const TauraheWords4[] = { "achi", "eche", "pawl", "pohe", "powa", "shne", "shno", "shom", "wata", "zaga" };
+    static const char* const TauraheWords5[] = { "pawne", "shush", "shuil", "shoal", "waska" };
+    static const char* const TauraheWords6[] = { "a'hoka", "e'hoke", "lakota", "mahpee", "mah'ke", "wotaha" };
+    static const char* const TauraheWords7[] = { "hah'chu", "mah'pee", "mut'sha", "washte", "wat'cha" };
+
+    // Dwarvish language syllables (Language 6)
+    static const char* const DwarvishWords1[] = { "a", "e", "i", "o", "u", "n" };
+    static const char* const DwarvishWords2[] = { "an", "az", "ba", "da", "ga", "gi", "go", "ka", "lo", "mi", "mo", "na", "ni", "no", "ok", "ra" };
+    static const char* const DwarvishWords3[] = { "aki", "arm", "bae", "dum", "dun", "gol", "gon", "got", "gra", "kha", "kol", "lok", "mod", "mus", "raz" };
+    static const char* const DwarvishWords4[] = { "bael", "dora", "duna", "grum", "gora", "kagg", "kazg", "khaz", "moda", "modr" };
+    static const char* const DwarvishWords5[] = { "angor", "grumm", "kazan", "khaza", "modan", "modor", "thogr" };
+    static const char* const DwarvishWords6[] = { "akimod", "angrad", "angazo", "khazad", "modani", "modgud" };
+    static const char* const DwarvishWords7[] = { "anvilma", "ironfor", "kazadua", "kazadum", "modguda" };
+
+    // Demonic/Eredun language syllables (Language 8)
+    static const char* const DemonicWords1[] = { "a", "e", "i", "o", "u", "x", "y", "z" };
+    static const char* const DemonicWords2[] = { "ag", "az", "ga", "gi", "il", "ka", "ki", "og", "re", "te", "ul", "ur", "xi", "za", "ze", "zi" };
+    static const char* const DemonicWords3[] = { "aga", "agi", "ara", "aru", "aza", "bil", "gal", "gor", "kil", "lek", "nik", "rek", "tek", "tor", "zar", "zez", "zil" };
+    static const char* const DemonicWords4[] = { "adun", "alar", "arez", "gali", "gora", "maza", "odun", "orah", "parn", "quor", "rega", "reth", "thal", "thon", "turr", "zaga", "zara" };
+    static const char* const DemonicWords5[] = { "adare", "buras", "enkil", "galar", "mazon", "melar", "modas", "nagas", "rilla", "tenna", "zekul" };
+    static const char* const DemonicWords6[] = { "adocon", "belaph", "dargon", "dorazu", "kazile", "mannor", "revola", "riftel", "rommon", "toralu", "zennsu" };
+    static const char* const DemonicWords7[] = { "amanare", "belarom", "danashj", "faramos", "galenth", "kieldaz", "rackmar", "rathost", "tirigon", "zennshi" };
+
+    // Titan language syllables (Language 9)
+    static const char* const TitanWords1[] = { "a", "e", "i", "o", "u", "x", "y", "z" };
+    static const char* const TitanWords2[] = { "an", "ar", "ez", "ka", "lo", "ma", "no", "ra", "re", "ti", "ul", "ur", "xi", "za", "ze" };
+    static const char* const TitanWords3[] = { "ahn", "amo", "ano", "aza", "kal", "kar", "kaz", "laz", "lom", "olo", "oma", "oza", "raz", "ula", "zan", "zar" };
+    static const char* const TitanWords4[] = { "agol", "anik", "azra", "gera", "gola", "kala", "mara", "omen", "ralo", "ulan", "uraz", "zara", "zola" };
+    static const char* const TitanWords5[] = { "amara", "goleli", "kazum", "lornu", "mogan", "namir", "orabu", "razak", "romol" };
+    static const char* const TitanWords6[] = { "agorhe", "anrulo", "azrena", "gorahl", "golaan", "kalimr", "loknul", "mozono", "ralomi", "ulaman", "zannir" };
+    static const char* const TitanWords7[] = { "alorana", "anomura", "azramir", "kazulum", "logonre", "malogin", "revolar", "torimos", "umazano", "urazona" };
+
+    // Thalassian language syllables (Language 10)
+    static const char* const ThalassianWords1[] = { "a", "d", "e", "i", "n", "o" };
+    static const char* const ThalassianWords2[] = { "al", "an", "da", "do", "en", "lo", "na", "ni", "no", "ri", "th" };
+    static const char* const ThalassianWords3[] = { "ala", "ano", "anu", "ash", "dor", "dur", "end", "eth", "fal", "ith", "nar", "nor", "osa", "tal", "tha", "the" };
+    static const char* const ThalassianWords4[] = { "alah", "aman", "anar", "andu", "dath", "diel", "dora", "felo", "mush", "rath", "shar", "shan", "thas", "thus" };
+    static const char* const ThalassianWords5[] = { "adore", "alara", "balah", "ishnu", "manag", "mush'a", "shari", "talah", "thera", "thero" };
+    static const char* const ThalassianWords6[] = { "ashala", "dorini", "falore", "ishura", "neph'o", "shando", "thero'shan" };
+    static const char* const ThalassianWords7[] = { "al'aman", "asto're", "fala'na", "ishnu'alah", "shan'do", "thero'shan", "thoribas" };
+
+    // Draconic language syllables (Language 11)
+    static const char* const DraconicWords1[] = { "a", "e", "i", "o", "u", "y" };
+    static const char* const DraconicWords2[] = { "ar", "az", "de", "do", "go", "ko", "li", "ma", "ni", "no", "ra", "re", "ri", "se", "xi", "za", "ze" };
+    static const char* const DraconicWords3[] = { "aza", "dra", "gos", "kil", "laz", "mar", "nal", "ner", "nes", "nos", "raz", "rax", "ser", "taz", "zar", "zer" };
+    static const char* const DraconicWords4[] = { "ador", "alar", "dora", "gosa", "kiri", "mara", "nori", "ossa", "raza", "rina", "rixar", "tara", "zara", "zenn" };
+    static const char* const DraconicWords5[] = { "azeri", "dorin", "gosar", "kirix", "marim", "norin", "razan", "rilar", "zalar", "zeram" };
+    static const char* const DraconicWords6[] = { "aladra", "doriaz", "gosaen", "kirili", "marala", "norami", "razena", "terala", "zalaen", "zerami" };
+    static const char* const DraconicWords7[] = { "alazane", "dorazan", "gosiren", "kirilar", "maralax", "norazen", "rinalaz", "teramaz", "ziralen" };
+
+    // Kalimag/Old Tongue language syllables (Language 12)
+    static const char* const KalimagWords1[] = { "a", "e", "i", "o", "u", "x", "y", "z" };
+    static const char* const KalimagWords2[] = { "ag", "an", "ar", "ez", "ka", "ko", "lo", "ma", "no", "og", "ol", "ra", "ul", "ur", "xi", "za" };
+    static const char* const KalimagWords3[] = { "agg", "ahn", "amo", "ano", "aza", "kal", "kar", "lok", "lom", "ola", "oma", "oza", "raz", "ula", "zan", "zar" };
+    static const char* const KalimagWords4[] = { "agol", "anik", "azra", "gera", "gola", "mara", "omen", "ralo", "ulan", "uraz", "zara", "zola" };
+    static const char* const KalimagWords5[] = { "amara", "golel", "kazum", "lornu", "mogan", "namir", "orabu", "razak", "romol" };
+    static const char* const KalimagWords6[] = { "agorhe", "anrulo", "azrena", "golaan", "kalimr", "loknul", "mozono", "ralomi", "ulaman", "zannir" };
+    static const char* const KalimagWords7[] = { "alorana", "anomura", "azramir", "kazulum", "logonre", "malogin", "torimos", "umazano", "urazona" };
+
+    // Gnomish language syllables (Language 13)
+    static const char* const GnomishWords1[] = { "a", "e", "i", "o", "u", "y" };
+    static const char* const GnomishWords2[] = { "an", "ko", "lo", "lu", "me", "ne", "re", "ru", "se", "ti", "va", "ve" };
+    static const char* const GnomishWords3[] = { "ash", "bor", "bur", "far", "gol", "hir", "lon", "mos", "nud", "ras", "ver", "vil", "wos" };
+    static const char* const GnomishWords4[] = { "ador", "agol", "dana", "goth", "lars", "noth", "nuff", "odes", "ruff", "thor", "uden", "veld", "vohl", "vrum" };
+    static const char* const GnomishWords5[] = { "algos", "barad", "borne", "eynes", "ergin", "garde", "gloin", "majis", "melka", "nagan", "novas", "regen", "tiras", "wirsh" };
+    static const char* const GnomishWords6[] = { "andune", "aratoi", "dorini", "ealdor", "engoth", "gorath", "lagosh", "landor", "melgar", "modgud", "nogrod", "udinas" };
+    static const char* const GnomishWords7[] = { "andovis", "eglatin", "gilliam", "karlain", "landoar", "melanis", "modimus", "nelandr", "thandol", "theraol" };
+
+    // Troll language syllables (Language 14)
+    static const char* const TrollWords1[] = { "a", "e", "i", "o", "u", "y" };
+    static const char* const TrollWords2[] = { "ah", "an", "ba", "da", "di", "go", "he", "ko", "lo", "mo", "ne", "no", "ta", "tu", "za", "zu" };
+    static const char* const TrollWords3[] = { "aga", "ami", "bak", "bin", "deh", "dis", "din", "don", "hex", "jin", "lek", "mon", "taz", "weh", "yeh", "zin", "zul" };
+    static const char* const TrollWords4[] = { "adda", "asar", "brak", "dath", "gola", "gula", "jasi", "mojo", "sesi", "shim", "taka", "wala", "yudo", "zala", "zenn", "zufr" };
+    static const char* const TrollWords5[] = { "dalah", "hekle", "juba", "kalas", "mikah", "sakir", "tingo", "tulak", "zukar" };
+    static const char* const TrollWords6[] = { "deh'lo", "dunada", "guvnor", "halash", "hekali", "jin'zil", "kas'din", "moojin", "wekali" };
+    static const char* const TrollWords7[] = { "ashanka", "deh'yalo", "dukalar", "gon'jin", "heka'le", "jin'zaka", "kas'udar", "sen'jina", "zul'adar", "zul'aman" };
+
     // Gutterspeak language syllables (Language 33) - similar to Common with some variation
     static const char* const GutterspeakWords1[] = { "a", "e", "i", "o", "u", "y" };
     static const char* const GutterspeakWords2[] = { "an", "ko", "lo", "lu", "me", "ne", "re", "ru", "se", "ti", "va", "ve" };
@@ -5965,6 +6055,15 @@ namespace LanguageWords
     static const char* const GutterspeakWords5[] = { "algos", "barad", "borne", "eynes", "garde", "gloin", "majis", "melka", "nagan", "novas", "regen" };
     static const char* const GutterspeakWords6[] = { "andune", "dorini", "ealdor", "engoth", "gorath", "lagosh", "modgud", "nogrod", "udinas" };
     static const char* const GutterspeakWords7[] = { "andovis", "eglatin", "gilliam", "karlain", "melanis", "modimus", "nelandr", "thandol" };
+
+    // Draenei language syllables (Language 35)
+    static const char* const DraeneiWords1[] = { "a", "e", "i", "o", "u", "x", "y", "z" };
+    static const char* const DraeneiWords2[] = { "az", "il", "ka", "ma", "me", "na", "no", "re", "ru", "ta", "te", "xi", "za", "ze", "zi", "zu" };
+    static const char* const DraeneiWords3[] = { "anu", "ara", "aru", "kil", "lek", "maa", "maz", "nik", "ore", "paz", "rek", "tek", "zar", "zez", "zil" };
+    static const char* const DraeneiWords4[] = { "adun", "alar", "arez", "maza", "odun", "orah", "parn", "reth", "thal", "thon", "turr", "zaga", "zara" };
+    static const char* const DraeneiWords5[] = { "adare", "buras", "enkil", "galar", "mazon", "melar", "modas", "nagas", "rilla", "tenna", "zekul" };
+    static const char* const DraeneiWords6[] = { "adocon", "belaph", "dargon", "dorazu", "kazile", "mannor", "revola", "riftel", "rommon", "toralu", "zennsu" };
+    static const char* const DraeneiWords7[] = { "amanare", "belarom", "danashj", "faramos", "galenth", "kieldaz", "rackmar", "rathost", "tirigon", "zennshi" };
 
     // Helper function that selects a word from an array using hash-based indexing
     // This ensures the same input word always produces the same translated word
@@ -6013,6 +6112,186 @@ std::string Player::TranslateWordToLanguage(std::string_view word, Language lang
                 result = LanguageWords::SelectWord(LanguageWords::OrcishWords1, hash);
             break;
         }
+        case LANG_DARNASSIAN:
+        {
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords1, hash);
+            break;
+        }
+        case LANG_TAURAHE:
+        {
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::TauraheWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::TauraheWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::TauraheWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::TauraheWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::TauraheWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::TauraheWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::TauraheWords1, hash);
+            break;
+        }
+        case LANG_DWARVISH:
+        {
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords1, hash);
+            break;
+        }
+        case LANG_DEMONIC:
+        {
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::DemonicWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::DemonicWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::DemonicWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::DemonicWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::DemonicWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::DemonicWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::DemonicWords1, hash);
+            break;
+        }
+        case LANG_TITAN:
+        {
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::TitanWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::TitanWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::TitanWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::TitanWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::TitanWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::TitanWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::TitanWords1, hash);
+            break;
+        }
+        case LANG_THALASSIAN:
+        {
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords1, hash);
+            break;
+        }
+        case LANG_DRACONIC:
+        {
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::DraconicWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::DraconicWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::DraconicWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::DraconicWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::DraconicWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::DraconicWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::DraconicWords1, hash);
+            break;
+        }
+        case LANG_KALIMAG:
+        {
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::KalimagWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::KalimagWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::KalimagWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::KalimagWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::KalimagWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::KalimagWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::KalimagWords1, hash);
+            break;
+        }
+        case LANG_GNOMISH:
+        {
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::GnomishWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::GnomishWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::GnomishWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::GnomishWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::GnomishWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::GnomishWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::GnomishWords1, hash);
+            break;
+        }
+        case LANG_TROLL:
+        {
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::TrollWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::TrollWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::TrollWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::TrollWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::TrollWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::TrollWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::TrollWords1, hash);
+            break;
+        }
         case LANG_GUTTERSPEAK:
         {
             if (len >= 7)
@@ -6029,6 +6308,24 @@ std::string Player::TranslateWordToLanguage(std::string_view word, Language lang
                 result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords2, hash);
             else
                 result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords1, hash);
+            break;
+        }
+        case LANG_DRAENEI:
+        {
+            if (len >= 7)
+                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords7, hash);
+            else if (len >= 6)
+                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords6, hash);
+            else if (len >= 5)
+                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords5, hash);
+            else if (len >= 4)
+                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords4, hash);
+            else if (len >= 3)
+                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords3, hash);
+            else if (len >= 2)
+                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords2, hash);
+            else
+                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords1, hash);
             break;
         }
         case LANG_COMMON:
@@ -20844,9 +21141,16 @@ void Player::Say(std::string_view text, Language language, WorldObject const* /*
     // For languages other than universal, customize message for each receiver based on comprehension
     if (language != LANG_UNIVERSAL && language != LANG_ADDON)
     {
-        // Send original message to self
+        // Get speaker's skill in this language - this determines how well they can express themselves
+        float speakerComprehension = GetLanguageComprehension(language);
+
+        // Pre-scramble text based on speaker's skill level
+        // If speaker has low skill, the text comes out broken for everyone
+        std::string speakerText = ScrambleTextByComprehension(_text, speakerComprehension, language);
+
+        // Send the speaker-scrambled message to self
         WorldPacket dataSelf;
-        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_SAY, language, this, this, _text);
+        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_SAY, language, this, this, speakerText);
         SendDirectMessage(&dataSelf);
 
         std::list<Player*> players;
@@ -20860,8 +21164,15 @@ void Player::Say(std::string_view text, Language language, WorldObject const* /*
             if (!player->HaveAtClient(this))
                 continue;
 
-            float comprehension = player->GetLanguageComprehension(language);
-            std::string customText = player->ScrambleTextByComprehension(_text, comprehension, language);
+            // Get listener's comprehension - how well they understand the language
+            float listenerComprehension = player->GetLanguageComprehension(language);
+
+            // The effective comprehension is limited by both speaker's ability to express
+            // and listener's ability to understand. Use minimum of both.
+            float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+
+            // Scramble the original text based on effective comprehension
+            std::string customText = player->ScrambleTextByComprehension(_text, effectiveComprehension, language);
 
             WorldPacket data;
             ChatHandler::BuildChatPacket(data, CHAT_MSG_SAY, language, this, this, customText);
@@ -20892,9 +21203,16 @@ void Player::Yell(std::string_view text, Language language, WorldObject const* /
     // For languages other than universal, customize message for each receiver based on comprehension
     if (language != LANG_UNIVERSAL && language != LANG_ADDON)
     {
-        // Send original message to self
+        // Get speaker's skill in this language - this determines how well they can express themselves
+        float speakerComprehension = GetLanguageComprehension(language);
+
+        // Pre-scramble text based on speaker's skill level
+        // If speaker has low skill, the text comes out broken for everyone
+        std::string speakerText = ScrambleTextByComprehension(_text, speakerComprehension, language);
+
+        // Send the speaker-scrambled message to self
         WorldPacket dataSelf;
-        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_YELL, language, this, this, _text);
+        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_YELL, language, this, this, speakerText);
         SendDirectMessage(&dataSelf);
 
         std::list<Player*> players;
@@ -20908,12 +21226,19 @@ void Player::Yell(std::string_view text, Language language, WorldObject const* /
             if (!player->HaveAtClient(this))
                 continue;
 
-            float comprehension = player->GetLanguageComprehension(language);
-            std::string customText = player->ScrambleTextByComprehension(_text, comprehension, language);
+            // Get listener's comprehension - how well they understand the language
+            float listenerComprehension = player->GetLanguageComprehension(language);
+
+            // The effective comprehension is limited by both speaker's ability to express
+            // and listener's ability to understand. Use minimum of both.
+            float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+
+            // Scramble the original text based on effective comprehension
+            std::string customText = player->ScrambleTextByComprehension(_text, effectiveComprehension, language);
 
             // If fully comprehended, send as universal so client shows original text
             // If not fully comprehended, send as original language with scrambled text
-            Language sendLang = (comprehension >= 1.0f) ? LANG_UNIVERSAL : language;
+            Language sendLang = (effectiveComprehension >= 1.0f) ? LANG_UNIVERSAL : language;
 
             WorldPacket data;
             ChatHandler::BuildChatPacket(data, CHAT_MSG_YELL, sendLang, this, this, customText);
@@ -25153,8 +25478,11 @@ void Player::_LoadSkills(PreparedQueryResult result)
             // set fixed skill ranges
             switch (GetSkillRangeType(rcEntry))
             {
-                case SKILL_RANGE_LANGUAGE:                      // 300..300
-                    value = max = 300;
+                case SKILL_RANGE_LANGUAGE:                      // 1..300, preserve saved value
+                    max = 300;
+                    // Keep the saved value from DB (clamped to valid range)
+                    if (value > max)
+                        value = max;
                     break;
                 case SKILL_RANGE_MONO:                          // 1..1, grey monolite bar
                     value = max = 1;
