@@ -6006,10 +6006,10 @@ namespace LanguageWords
     static const char* const ThalassianWords1[] = { "a", "e", "i", "o", "u", "y" };
     static const char* const ThalassianWords2[] = { "al", "an", "da", "di", "el", "lo", "na", "ni", "no", "ri", "su" };
     static const char* const ThalassianWords3[] = { "ala", "ano", "anu", "bel", "dal", "dor", "end", "eth", "fal", "lor", "nar", "nor", "osa", "sin", "tha" };
-    static const char* const ThalassianWords4[] = { "alah", "anar", "andu", "belore", "dath", "diel", "dora", "felo", "quel", "rath", "shal", "shan", "thas", "thus" };
-    static const char* const ThalassianWords5[] = { "adore", "alara", "balah", "belore", "dorei", "mana'a", "selama", "shari", "talah", "thera" };
-    static const char* const ThalassianWords6[] = { "anaria", "belore", "dalah", "falore", "ishura", "queldo", "selama", "shindu" };
-    static const char* const ThalassianWords7[] = { "al'dieb", "anaria", "belore", "dalah'surfal", "quel'dorei", "selama", "shorel'aran", "vendel'o" };
+    static const char* const ThalassianWords4[] = { "alah", "anar", "andu", "bash", "dath", "diel", "dora", "felo", "quel", "rath", "shal", "shan", "thas", "thus" };
+    static const char* const ThalassianWords5[] = { "adore", "alara", "balah", "dorei", "mana'a", "ronae", "shari", "talah", "thera", "zaram" };
+    static const char* const ThalassianWords6[] = { "anaria", "dalah", "falore", "ishura", "queldo", "roneth", "shindu", "surfal" };
+    static const char* const ThalassianWords7[] = { "al'dieb", "anaria", "ashal'a", "dalah'surfal", "quel'dorei", "shorel'aran", "thori'dal", "vendel'o" };
 
     // Draconic language syllables (Language 11)
     static const char* const DraconicWords1[] = { "a", "e", "i", "o", "u", "y" };
@@ -25480,8 +25480,10 @@ void Player::_LoadSkills(PreparedQueryResult result)
             {
                 case SKILL_RANGE_LANGUAGE:                      // 1..300, preserve saved value
                     max = 300;
-                    // Keep the saved value from DB (clamped to valid range)
-                    if (value > max)
+                    // Keep the saved value from DB (clamped to valid range 1-300)
+                    if (value < 1)
+                        value = 1;
+                    else if (value > max)
                         value = max;
                     break;
                 case SKILL_RANGE_MONO:                          // 1..1, grey monolite bar
