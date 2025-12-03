@@ -21172,7 +21172,7 @@ void Player::Say(std::string_view text, Language language, WorldObject const* /*
             float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
 
             // Scramble the original text based on effective comprehension
-            std::string customText = player->ScrambleTextByComprehension(_text, effectiveComprehension, language);
+            std::string customText = ScrambleTextByComprehension(_text, effectiveComprehension, language);
 
             WorldPacket data;
             ChatHandler::BuildChatPacket(data, CHAT_MSG_SAY, language, this, this, customText);
@@ -25478,14 +25478,9 @@ void Player::_LoadSkills(PreparedQueryResult result)
             // set fixed skill ranges
             switch (GetSkillRangeType(rcEntry))
             {
-                case SKILL_RANGE_LANGUAGE:                      // 1..300, preserve saved value
-                    max = 300;
-                    // Keep the saved value from DB (clamped to valid range 1-300)
-                    if (value < 1)
-                        value = 1;
-                    else if (value > max)
-                        value = max;
-                    break;
+                //case SKILL_RANGE_LANGUAGE:                      // This sets languages to 300 instantly on login
+                //    max = value = 300;
+                //    break;
                 case SKILL_RANGE_MONO:                          // 1..1, grey monolite bar
                     value = max = 1;
                     break;
