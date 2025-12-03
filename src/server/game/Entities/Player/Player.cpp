@@ -5923,14 +5923,6 @@ float Player::GetLanguageComprehension(Language language) const
     if (!langDesc || langDesc->skill_id == 0)
         return 0.0f;
 
-    // Check for SPELL_AURA_COMPREHEND_LANGUAGE - grants full comprehension
-    Unit::AuraEffectList const& langAuras = GetAuraEffectsByType(SPELL_AURA_COMPREHEND_LANGUAGE);
-    for (Unit::AuraEffectList::const_iterator i = langAuras.begin(); i != langAuras.end(); ++i)
-    {
-        if ((*i)->GetMiscValue() == int32(language))
-            return 1.0f;
-    }
-
     // Get the player's skill value for this language
     uint16 skillValue = GetSkillValue(langDesc->skill_id);
     if (skillValue == 0)
@@ -20871,12 +20863,8 @@ void Player::Say(std::string_view text, Language language, WorldObject const* /*
             float comprehension = player->GetLanguageComprehension(language);
             std::string customText = player->ScrambleTextByComprehension(_text, comprehension, language);
 
-            // If fully comprehended, send as universal so client shows original text
-            // If not fully comprehended, send as original language with scrambled text
-            Language sendLang = (comprehension >= 1.0f) ? LANG_UNIVERSAL : language;
-
             WorldPacket data;
-            ChatHandler::BuildChatPacket(data, CHAT_MSG_SAY, sendLang, this, this, customText);
+            ChatHandler::BuildChatPacket(data, CHAT_MSG_SAY, language, this, this, customText);
             player->SendDirectMessage(&data);
         }
     }
