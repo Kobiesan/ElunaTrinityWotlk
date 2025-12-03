@@ -6002,14 +6002,14 @@ namespace LanguageWords
     static const char* const TitanWords6[] = { "agorhe", "anrulo", "azrena", "gorahl", "golaan", "kalimr", "loknul", "mozono", "ralomi", "ulaman", "zannir" };
     static const char* const TitanWords7[] = { "alorana", "anomura", "azramir", "kazulum", "logonre", "malogin", "revolar", "torimos", "umazano", "urazona" };
 
-    // Thalassian language syllables (Language 10)
-    static const char* const ThalassianWords1[] = { "a", "d", "e", "i", "n", "o" };
-    static const char* const ThalassianWords2[] = { "al", "an", "da", "do", "en", "lo", "na", "ni", "no", "ri", "th" };
-    static const char* const ThalassianWords3[] = { "ala", "ano", "anu", "ash", "dor", "dur", "end", "eth", "fal", "ith", "nar", "nor", "osa", "tal", "tha", "the" };
-    static const char* const ThalassianWords4[] = { "alah", "aman", "anar", "andu", "dath", "diel", "dora", "felo", "mush", "rath", "shar", "shan", "thas", "thus" };
-    static const char* const ThalassianWords5[] = { "adore", "alara", "balah", "ishnu", "manag", "mush'a", "shari", "talah", "thera", "thero" };
-    static const char* const ThalassianWords6[] = { "ashala", "dorini", "falore", "ishura", "neph'o", "shando", "thero'shan" };
-    static const char* const ThalassianWords7[] = { "al'aman", "asto're", "fala'na", "ishnu'alah", "shan'do", "thero'shan", "thoribas" };
+    // Thalassian language syllables (Language 10) - Derived from Darnassian but evolved distinctly
+    static const char* const ThalassianWords1[] = { "a", "e", "i", "o", "u", "y" };
+    static const char* const ThalassianWords2[] = { "al", "an", "da", "di", "el", "lo", "na", "ni", "no", "ri", "su" };
+    static const char* const ThalassianWords3[] = { "ala", "ano", "anu", "bel", "dal", "dor", "end", "eth", "fal", "lor", "nar", "nor", "osa", "sin", "tha" };
+    static const char* const ThalassianWords4[] = { "alah", "anar", "andu", "belore", "dath", "diel", "dora", "felo", "quel", "rath", "shal", "shan", "thas", "thus" };
+    static const char* const ThalassianWords5[] = { "adore", "alara", "balah", "belore", "dorei", "mana'a", "selama", "shari", "talah", "thera" };
+    static const char* const ThalassianWords6[] = { "anaria", "belore", "dalah", "falore", "ishura", "queldo", "selama", "shindu" };
+    static const char* const ThalassianWords7[] = { "al'dieb", "anaria", "belore", "dalah'surfal", "quel'dorei", "selama", "shorel'aran", "vendel'o" };
 
     // Draconic language syllables (Language 11)
     static const char* const DraconicWords1[] = { "a", "e", "i", "o", "u", "y" };
@@ -6056,14 +6056,14 @@ namespace LanguageWords
     static const char* const GutterspeakWords6[] = { "andune", "dorini", "ealdor", "engoth", "gorath", "lagosh", "modgud", "nogrod", "udinas" };
     static const char* const GutterspeakWords7[] = { "andovis", "eglatin", "gilliam", "karlain", "melanis", "modimus", "nelandr", "thandol" };
 
-    // Draenei language syllables (Language 35)
-    static const char* const DraeneiWords1[] = { "a", "e", "i", "o", "u", "x", "y", "z" };
-    static const char* const DraeneiWords2[] = { "az", "il", "ka", "ma", "me", "na", "no", "re", "ru", "ta", "te", "xi", "za", "ze", "zi", "zu" };
-    static const char* const DraeneiWords3[] = { "anu", "ara", "aru", "kil", "lek", "maa", "maz", "nik", "ore", "paz", "rek", "tek", "zar", "zez", "zil" };
-    static const char* const DraeneiWords4[] = { "adun", "alar", "arez", "maza", "odun", "orah", "parn", "reth", "thal", "thon", "turr", "zaga", "zara" };
-    static const char* const DraeneiWords5[] = { "adare", "buras", "enkil", "galar", "mazon", "melar", "modas", "nagas", "rilla", "tenna", "zekul" };
-    static const char* const DraeneiWords6[] = { "adocon", "belaph", "dargon", "dorazu", "kazile", "mannor", "revola", "riftel", "rommon", "toralu", "zennsu" };
-    static const char* const DraeneiWords7[] = { "amanare", "belarom", "danashj", "faramos", "galenth", "kieldaz", "rackmar", "rathost", "tirigon", "zennshi" };
+    // Draenei language syllables (Language 35) - Related to but distinct from Eredun/Demonic
+    static const char* const DraeneiWords1[] = { "a", "e", "i", "o", "u", "n", "r", "m" };
+    static const char* const DraeneiWords2[] = { "az", "di", "ka", "ki", "ma", "me", "na", "no", "os", "ra", "re", "ta", "te", "xi", "za", "zu" };
+    static const char* const DraeneiWords3[] = { "anu", "ara", "aru", "ata", "dor", "gol", "kil", "man", "nor", "ore", "pha", "tal", "ten", "vor", "zar" };
+    static const char* const DraeneiWords4[] = { "adun", "aman", "anar", "kure", "maev", "naar", "orah", "rega", "tenu", "tion", "vaal", "vora", "zara" };
+    static const char* const DraeneiWords5[] = { "arakal", "enosh", "gular", "kuren", "manat", "naaru", "peori", "pheta", "tiral", "voeli" };
+    static const char* const DraeneiWords6[] = { "archeno", "dioniss", "eredun", "krokul", "manaph", "nobund", "peothel", "ximala", "zangar" };
+    static const char* const DraeneiWords7[] = { "aucheno", "daemond", "dioniss", "exodar", "krokulu", "manafor", "nobundo", "zangarl" };
 
     // Helper function that selects a word from an array using hash-based indexing
     // This ensures the same input word always produces the same translated word
