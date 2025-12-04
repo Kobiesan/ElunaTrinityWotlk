@@ -6079,6 +6079,22 @@ std::string Player::TranslateWordToLanguage(std::string_view word, Language lang
     if (word.empty())
         return std::string();
 
+    // Special case: "lol" always translates to "kek" in Orcish and "bur" in Common
+    // This is a classic WoW easter egg
+    // For other languages, fallthrough to normal hash-based translation is intentional
+    if (word.size() == 3 && std::tolower(static_cast<unsigned char>(word[0])) == 'l')
+    {
+        if (std::tolower(static_cast<unsigned char>(word[1])) == 'o' &&
+            std::tolower(static_cast<unsigned char>(word[2])) == 'l')
+        {
+            bool capitalize = std::isupper(static_cast<unsigned char>(word[0]));
+            if (language == LANG_ORCISH)
+                return capitalize ? "Kek" : "kek";
+            else if (language == LANG_COMMON)
+                return capitalize ? "Bur" : "bur";
+        }
+    }
+
     size_t len = word.size();
     
     // Generate a deterministic hash from the word
