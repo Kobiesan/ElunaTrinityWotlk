@@ -204,7 +204,7 @@ void Arena::EndBattleground(uint32 winner)
                         if (Player* player = ObjectAccessor::FindConnectedPlayer(score.first))
                         {
                             TC_LOG_DEBUG("bg.arena", "Statistics match Type: {} for {} (GUID: {}, Team: {}, IP: {}): {}",
-                                GetArenaType(), player->GetName(), score.first, player->GetArenaTeamId(GetArenaType() == 5 ? 2 : GetArenaType() == 3),
+                                GetArenaType(), player->GetName(), score.first, player->GetArenaTeamId(ArenaTeam::GetSlotByType(GetArenaType())),
                                 player->GetSession()->GetRemoteAddress(), score.second->ToString());
                         }
             }
