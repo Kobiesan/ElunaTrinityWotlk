@@ -474,7 +474,7 @@ void ArenaTeam::Query(WorldSession* session)
     WorldPacket data(SMSG_ARENA_TEAM_QUERY_RESPONSE, 4*7+GetName().size()+1);
     data << uint32(GetId());                                // team id
     data << GetName();                                      // team name
-    data << uint32(GetType());                              // arena team type (2=2x2, 3=3x3 or 5=5x5)
+    data << uint32(GetType());                              // arena team type (1=1v1, 2=2v2, 3=3v3)
     data << uint32(BackgroundColor);                        // background color
     data << uint32(EmblemStyle);                            // emblem style
     data << uint32(EmblemColor);                            // emblem color
