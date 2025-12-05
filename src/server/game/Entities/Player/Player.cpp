@@ -6176,6 +6176,7 @@ namespace LanguageWords
     };
 
     static const WordListEntry DarnassianWordTable[] = {
+        // Note: minLength 16 uses Words17 because there are no 16-letter Darnassian words
         MakeEntry(16, DarnassianWords17), MakeEntry(15, DarnassianWords15), MakeEntry(14, DarnassianWords14),
         MakeEntry(13, DarnassianWords13), MakeEntry(12, DarnassianWords12), MakeEntry(11, DarnassianWords11),
         MakeEntry(10, DarnassianWords10), MakeEntry(9, DarnassianWords9), MakeEntry(8, DarnassianWords8),
