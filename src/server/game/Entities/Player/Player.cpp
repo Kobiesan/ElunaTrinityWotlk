@@ -6301,8 +6301,6 @@ std::string Player::TranslateWordToLanguage(std::string_view word, Language lang
         hash = hash * 31 + static_cast<unsigned char>(std::tolower(static_cast<unsigned char>(c)));
     }
 
-    bool capitalize = std::isupper(static_cast<unsigned char>(word[0]));
-
     // Select word using efficient lookup table based on language
     const char* selectedWord = nullptr;
     switch (language)
@@ -6355,10 +6353,14 @@ std::string Player::TranslateWordToLanguage(std::string_view word, Language lang
 
     std::string result(selectedWord);
 
-    // Capitalize first letter if original was capitalized
-    if (capitalize && !result.empty())
+    // Preserve the capitalization pattern of the original word
+    size_t minLen = std::min(word.size(), result.size());
+    for (size_t i = 0; i < minLen; ++i)
     {
-        result[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(result[0])));
+        if (std::isupper(static_cast<unsigned char>(word[i])))
+            result[i] = static_cast<char>(std::toupper(static_cast<unsigned char>(result[i])));
+        else
+            result[i] = static_cast<char>(std::tolower(static_cast<unsigned char>(result[i])));
     }
 
     return result;
