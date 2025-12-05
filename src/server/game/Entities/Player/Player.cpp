@@ -6437,6 +6437,81 @@ std::string Player::ScrambleTextByComprehension(std::string_view text, float com
     return result;
 }
 
+std::string Player::MarkUntranslatedWords(std::string_view text, float comprehension)
+{
+    // Early exit for empty text
+    if (text.empty())
+        return std::string();
+
+    // Full comprehension - no words are untranslated, return original text
+    if (comprehension >= 1.0f)
+        return std::string(text);
+
+    // Process text word by word, marking untranslated words with brackets
+    std::string result;
+    // Reserve extra space for brackets: each word could get 2 extra characters
+    constexpr size_t BUFFER_MULTIPLIER = 2;
+    result.reserve(text.size() * BUFFER_MULTIPLIER);
+
+    size_t wordStart = 0;
+    bool inWord = false;
+
+    for (size_t i = 0; i <= text.size(); ++i)
+    {
+        bool isWordChar = (i < text.size()) && std::isalpha(static_cast<unsigned char>(text[i]));
+
+        if (isWordChar && !inWord)
+        {
+            wordStart = i;
+            inWord = true;
+        }
+        else if (!isWordChar && inWord)
+        {
+            // End of word - decide if we mark with brackets
+            std::string_view word = text.substr(wordStart, i - wordStart);
+
+            if (comprehension <= 0.0f)
+            {
+                // No comprehension - all words are untranslated, mark all
+                result += '[';
+                result += word;
+                result += ']';
+            }
+            else
+            {
+                // Partial comprehension - mark untranslated words with brackets
+                // Use the same logic as ScrambleTextByComprehension to determine which words
+                // would be translated (i.e., not intelligible to listeners)
+                constexpr uint32 POSITION_MULTIPLIER = 31;
+                constexpr uint32 LENGTH_MULTIPLIER = 17;
+                constexpr float THRESHOLD_DIVISOR = 100.0f;
+                float threshold = static_cast<float>((wordStart * POSITION_MULTIPLIER + word.size() * LENGTH_MULTIPLIER) % 100) / THRESHOLD_DIVISOR;
+
+                if (threshold < comprehension)
+                {
+                    // This word would be revealed (intelligible) - no brackets
+                    result += word;
+                }
+                else
+                {
+                    // This word would be translated (unintelligible) - mark with brackets
+                    result += '[';
+                    result += word;
+                    result += ']';
+                }
+            }
+
+            inWord = false;
+        }
+
+        // Add non-word characters directly
+        if (!isWordChar && i < text.size())
+            result += text[i];
+    }
+
+    return result;
+}
+
 uint16 Player::GetSkillStep(uint32 skill) const
 {
     if (!skill)
@@ -21155,9 +21230,11 @@ void Player::Say(std::string_view text, Language language, WorldObject const* /*
         // Get speaker's skill in this language - this determines how well they can express themselves
         float speakerComprehension = GetLanguageComprehension(language);
 
-        // Send the message to self
+        // Send the message to self with visual indicators on words that wouldn't be
+        // intelligible to fluent listeners due to speaker's low fluency
+        std::string selfText = MarkUntranslatedWords(_text, speakerComprehension);
         WorldPacket dataSelf;
-        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_SAY, language, this, this, _text);
+        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_SAY, language, this, this, selfText);
         SendDirectMessage(&dataSelf);
 
         std::list<Player*> players;
@@ -21213,9 +21290,11 @@ void Player::Yell(std::string_view text, Language language, WorldObject const* /
         // Get speaker's skill in this language - this determines how well they can express themselves
         float speakerComprehension = GetLanguageComprehension(language);
 
-        // Send the speaker-scrambled message to self
+        // Send the message to self with visual indicators on words that wouldn't be
+        // intelligible to fluent listeners due to speaker's low fluency
+        std::string selfText = MarkUntranslatedWords(_text, speakerComprehension);
         WorldPacket dataSelf;
-        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_YELL, language, this, this, _text);
+        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_YELL, language, this, this, selfText);
         SendDirectMessage(&dataSelf);
 
         std::list<Player*> players;
