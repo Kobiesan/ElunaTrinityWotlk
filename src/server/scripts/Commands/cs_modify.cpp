@@ -870,6 +870,8 @@ public:
 
         PlayerInfo const* info = sObjectMgr->GetPlayerInfo(target->GetRace(), target->GetClass());
         if (!info)
+            info = sObjectMgr->GetPlayerInfoForRace(target->GetRace());
+        if (!info)
             return false;
 
         char const* gender_str = (char*)args;

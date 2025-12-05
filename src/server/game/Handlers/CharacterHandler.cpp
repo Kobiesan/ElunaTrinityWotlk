@@ -942,8 +942,13 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder const& holder)
         pCurrChar->RemoveAtLoginFlag(AT_LOGIN_FIRST);
 
         PlayerInfo const* info = sObjectMgr->GetPlayerInfo(pCurrChar->GetRace(), pCurrChar->GetClass());
-        for (uint32 spellId : info->castSpells)
-            pCurrChar->CastSpell(pCurrChar, spellId, true);
+        if (!info)
+            info = sObjectMgr->GetPlayerInfoForRace(pCurrChar->GetRace());
+        if (info)
+        {
+            for (uint32 spellId : info->castSpells)
+                pCurrChar->CastSpell(pCurrChar, spellId, true);
+        }
 
         // Start with all map areas explored if enabled
         if (sWorld->getBoolConfig(CONFIG_START_ALL_EXPLORED))
@@ -1697,7 +1702,9 @@ void WorldSession::HandleCharFactionOrRaceChangeCallback(std::shared_ptr<Charact
     uint8 level       = characterInfo->Level;
     //std::string oldName = characterInfo->Name;
 
-    if (!sObjectMgr->GetPlayerInfo(factionChangeInfo->Race, playerClass))
+    // Verify the race/class combo is valid (either defined in playercreateinfo or fallback exists)
+    if (!sObjectMgr->GetPlayerInfo(factionChangeInfo->Race, playerClass) &&
+        !sObjectMgr->GetPlayerInfoForRace(factionChangeInfo->Race))
     {
         SendCharFactionChange(CHAR_CREATE_ERROR, factionChangeInfo.get());
         return;
