@@ -5941,14 +5941,14 @@ namespace LanguageWords
 {
     // Common language words (Language 7)
     static const char* const CommonWords1[] = { "a", "e", "i", "o", "u", "y" };
-    static const char* const CommonWords2[] = { "lo", "ne", "ve", "ru", "an", "ti", "me", "lu", "re", "se", "va", "ko" };
-    static const char* const CommonWords3[] = { "vil", "bor", "ras", "gol", "nud", "far", "wos", "mod", "ver", "ash", "lon", "bur", "hir" };
-    static const char* const CommonWords4[] = { "nuff", "thor", "ruff", "odes", "noth", "ador", "dana", "vrum", "veld", "vohl", "lars", "goth", "agol", "uden" };
-    static const char* const CommonWords5[] = { "wirsh", "novas", "regen", "gloin", "tiras", "barad", "garde", "majis", "ergin", "nagan", "algos", "eynes", "borne", "melka" };
+    static const char* const CommonWords2[] = { "va", "ne", "ve", "ru", "an", "ti", "me", "lu", "re", "se", "lo", "ko" };
+    static const char* const CommonWords3[] = { "vil", "bor", "ash", "gol", "nud", "mod", "wos", "far", "ver", "bur", "lon", "ras", "hir" };
+    static const char* const CommonWords4[] = { "nuff", "thor", "ruff", "vohl", "noth", "ador", "dana", "vrum", "veld", "odes", "uden", "goth", "agol", "lars" };
+    static const char* const CommonWords5[] = { "wirsh", "novas", "regen", "garde", "tiras", "barad", "gloin", "majis", "ergin", "nagan", "borne", "eynes", "algos", "melka" };
     static const char* const CommonWords6[] = { "ruftos", "aesire", "rothas", "nevren", "rogesh", "skilde", "vandar", "valesh", "engoth", "aziris", "mandos", "goibon", "danieb", "daegil", "waldir", "ealdor" };
     static const char* const CommonWords7[] = { "novaedi", "lithtos", "ewiddan", "forthis", "faergas", "sturume", "vassild", "nostyec", "andovis", "koshvel", "nandige", "kaelsig" };
-    static const char* const CommonWords8[] = { "thorniss", "ruftvess", "aldonoth", "endirvis", "landowar", "hamerung", "cynegold", "methrine", "lordaere" };
-    static const char* const CommonWords9[] = { "gloinador", "veldbarad", "gothalgos", "udenmajis", "danagarde", "vandarwos", "firalaine", "aetwinter", "eloderung", "regenthor" };
+    static const char* const CommonWords8[] = { "landowar", "ruftvess", "aldonoth", "endirvis", "thorniss", "hamerung", "cynegold", "methrine", "lordaere" };
+    static const char* const CommonWords9[] = { "gloinador", "veldbarad", "gothalgos", "danagarde", "udenmajis", "vandarwos", "firalaine", "aetwinter", "regenthor", "eloderung" };
     static const char* const CommonWords10[] = { "vastrungen", "falhedring", "cynewalden", "dyrstigost", "aelgestron", "danavandar" };
     static const char* const CommonWords11[] = { "wershaesire", "thorlithtos", "forthasador", "vassildador", "agolandovis", "bornevalesh", "farlandowar" };
     static const char* const CommonWords12[] = { "nevrenrothas", "mandosdaegil", "waldirskilde", "adorstaerume", "golveldbarad" };
@@ -6166,7 +6166,6 @@ namespace LanguageWords
     }
 
     // Word list tables for each language - sorted by minLength in descending order for efficient lookup
-    // This replaces the cascading if-else chains with a simple linear search from highest to lowest
     static const WordListEntry OrcishWordTable[] = {
         MakeEntry(13, OrcishWords13), MakeEntry(12, OrcishWords12), MakeEntry(11, OrcishWords11),
         MakeEntry(10, OrcishWords10), MakeEntry(9, OrcishWords9), MakeEntry(8, OrcishWords8),
@@ -6194,11 +6193,12 @@ namespace LanguageWords
     };
 
     static const WordListEntry DwarvishWordTable[] = {
-        MakeEntry(17, DwarvishWords17), MakeEntry(14, DwarvishWords14), MakeEntry(13, DwarvishWords13),
-        MakeEntry(12, DwarvishWords12), MakeEntry(11, DwarvishWords11), MakeEntry(10, DwarvishWords10),
-        MakeEntry(9, DwarvishWords9), MakeEntry(8, DwarvishWords8), MakeEntry(7, DwarvishWords7),
-        MakeEntry(6, DwarvishWords6), MakeEntry(5, DwarvishWords5), MakeEntry(4, DwarvishWords4),
-        MakeEntry(3, DwarvishWords3), MakeEntry(2, DwarvishWords2), MakeEntry(1, DwarvishWords1)
+        MakeEntry(17, DwarvishWords17), MakeEntry(16, DwarvishWords14), MakeEntry(15, DwarvishWords14),
+        MakeEntry(14, DwarvishWords14), MakeEntry(13, DwarvishWords13), MakeEntry(12, DwarvishWords12),
+        MakeEntry(11, DwarvishWords11), MakeEntry(10, DwarvishWords10), MakeEntry(9, DwarvishWords9),
+        MakeEntry(8, DwarvishWords8), MakeEntry(7, DwarvishWords7), MakeEntry(6, DwarvishWords6),
+        MakeEntry(5, DwarvishWords5), MakeEntry(4, DwarvishWords4), MakeEntry(3, DwarvishWords3),
+        MakeEntry(2, DwarvishWords2), MakeEntry(1, DwarvishWords1)
     };
 
     static const WordListEntry DemonicWordTable[] = {
@@ -21153,13 +21153,9 @@ void Player::Say(std::string_view text, Language language, WorldObject const* /*
         // Get speaker's skill in this language - this determines how well they can express themselves
         float speakerComprehension = GetLanguageComprehension(language);
 
-        // Pre-scramble text based on speaker's skill level
-        // If speaker has low skill, the text comes out broken for everyone
-        std::string speakerText = ScrambleTextByComprehension(_text, speakerComprehension, language);
-
-        // Send the speaker-scrambled message to self
+        // Send the message to self
         WorldPacket dataSelf;
-        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_SAY, language, this, this, speakerText);
+        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_SAY, language, this, this, _text);
         SendDirectMessage(&dataSelf);
 
         std::list<Player*> players;
@@ -21215,13 +21211,9 @@ void Player::Yell(std::string_view text, Language language, WorldObject const* /
         // Get speaker's skill in this language - this determines how well they can express themselves
         float speakerComprehension = GetLanguageComprehension(language);
 
-        // Pre-scramble text based on speaker's skill level
-        // If speaker has low skill, the text comes out broken for everyone
-        std::string speakerText = ScrambleTextByComprehension(_text, speakerComprehension, language);
-
         // Send the speaker-scrambled message to self
         WorldPacket dataSelf;
-        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_YELL, language, this, this, speakerText);
+        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_YELL, language, this, this, _text);
         SendDirectMessage(&dataSelf);
 
         std::list<Player*> players;
@@ -21245,12 +21237,8 @@ void Player::Yell(std::string_view text, Language language, WorldObject const* /
             // Scramble the original text based on effective comprehension
             std::string customText = player->ScrambleTextByComprehension(_text, effectiveComprehension, language);
 
-            // If fully comprehended, send as universal so client shows original text
-            // If not fully comprehended, send as original language with scrambled text
-            Language sendLang = (effectiveComprehension >= 1.0f) ? LANG_UNIVERSAL : language;
-
             WorldPacket data;
-            ChatHandler::BuildChatPacket(data, CHAT_MSG_YELL, sendLang, this, this, customText);
+            ChatHandler::BuildChatPacket(data, CHAT_MSG_YELL, language, this, this, customText);
             player->SendDirectMessage(&data);
         }
     }
