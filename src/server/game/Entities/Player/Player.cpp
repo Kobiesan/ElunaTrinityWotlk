@@ -6149,6 +6149,141 @@ namespace LanguageWords
     {
         return words[hash % N];
     }
+
+    // Structure for efficient word list lookup by length
+    struct WordListEntry
+    {
+        size_t minLength;           // Minimum word length for this entry
+        const char* const* words;   // Pointer to word array
+        size_t wordCount;           // Number of words in array
+    };
+
+    // Helper to create WordListEntry at compile time
+    template<size_t N>
+    constexpr WordListEntry MakeEntry(size_t minLen, const char* const (&words)[N])
+    {
+        return { minLen, words, N };
+    }
+
+    // Word list tables for each language - sorted by minLength in descending order for efficient lookup
+    // This replaces the cascading if-else chains with a simple linear search from highest to lowest
+    static const WordListEntry OrcishWordTable[] = {
+        MakeEntry(13, OrcishWords13), MakeEntry(12, OrcishWords12), MakeEntry(11, OrcishWords11),
+        MakeEntry(10, OrcishWords10), MakeEntry(9, OrcishWords9), MakeEntry(8, OrcishWords8),
+        MakeEntry(7, OrcishWords7), MakeEntry(6, OrcishWords6), MakeEntry(5, OrcishWords5),
+        MakeEntry(4, OrcishWords4), MakeEntry(3, OrcishWords3), MakeEntry(2, OrcishWords2),
+        MakeEntry(1, OrcishWords1)
+    };
+
+    static const WordListEntry DarnassianWordTable[] = {
+        MakeEntry(16, DarnassianWords17), MakeEntry(15, DarnassianWords15), MakeEntry(14, DarnassianWords14),
+        MakeEntry(13, DarnassianWords13), MakeEntry(12, DarnassianWords12), MakeEntry(11, DarnassianWords11),
+        MakeEntry(10, DarnassianWords10), MakeEntry(9, DarnassianWords9), MakeEntry(8, DarnassianWords8),
+        MakeEntry(7, DarnassianWords7), MakeEntry(6, DarnassianWords6), MakeEntry(5, DarnassianWords5),
+        MakeEntry(4, DarnassianWords4), MakeEntry(3, DarnassianWords3), MakeEntry(2, DarnassianWords2),
+        MakeEntry(1, DarnassianWords1)
+    };
+
+    static const WordListEntry TauraheWordTable[] = {
+        MakeEntry(15, TauraheWords15), MakeEntry(14, TauraheWords14), MakeEntry(13, TauraheWords13),
+        MakeEntry(11, TauraheWords11), MakeEntry(10, TauraheWords10), MakeEntry(9, TauraheWords9),
+        MakeEntry(8, TauraheWords8), MakeEntry(7, TauraheWords7), MakeEntry(6, TauraheWords6),
+        MakeEntry(5, TauraheWords5), MakeEntry(4, TauraheWords4), MakeEntry(3, TauraheWords3),
+        MakeEntry(2, TauraheWords2), MakeEntry(1, TauraheWords1)
+    };
+
+    static const WordListEntry DwarvishWordTable[] = {
+        MakeEntry(17, DwarvishWords17), MakeEntry(14, DwarvishWords14), MakeEntry(13, DwarvishWords13),
+        MakeEntry(12, DwarvishWords12), MakeEntry(11, DwarvishWords11), MakeEntry(10, DwarvishWords10),
+        MakeEntry(9, DwarvishWords9), MakeEntry(8, DwarvishWords8), MakeEntry(7, DwarvishWords7),
+        MakeEntry(6, DwarvishWords6), MakeEntry(5, DwarvishWords5), MakeEntry(4, DwarvishWords4),
+        MakeEntry(3, DwarvishWords3), MakeEntry(2, DwarvishWords2), MakeEntry(1, DwarvishWords1)
+    };
+
+    static const WordListEntry DemonicWordTable[] = {
+        MakeEntry(12, DemonicWords12), MakeEntry(11, DemonicWords11), MakeEntry(10, DemonicWords10),
+        MakeEntry(9, DemonicWords9), MakeEntry(8, DemonicWords8), MakeEntry(7, DemonicWords7),
+        MakeEntry(6, DemonicWords6), MakeEntry(5, DemonicWords5), MakeEntry(4, DemonicWords4),
+        MakeEntry(3, DemonicWords3), MakeEntry(2, DemonicWords2), MakeEntry(1, DemonicWords1)
+    };
+
+    static const WordListEntry TitanWordTable[] = {
+        MakeEntry(7, TitanWords7), MakeEntry(6, TitanWords6), MakeEntry(5, TitanWords5),
+        MakeEntry(4, TitanWords4), MakeEntry(3, TitanWords3), MakeEntry(2, TitanWords2),
+        MakeEntry(1, TitanWords1)
+    };
+
+    static const WordListEntry ThalassianWordTable[] = {
+        MakeEntry(17, ThalassianWords17), MakeEntry(16, ThalassianWords16), MakeEntry(15, ThalassianWords15),
+        MakeEntry(14, ThalassianWords14), MakeEntry(13, ThalassianWords13), MakeEntry(12, ThalassianWords12),
+        MakeEntry(11, ThalassianWords11), MakeEntry(10, ThalassianWords10), MakeEntry(9, ThalassianWords9),
+        MakeEntry(8, ThalassianWords8), MakeEntry(7, ThalassianWords7), MakeEntry(6, ThalassianWords6),
+        MakeEntry(5, ThalassianWords5), MakeEntry(4, ThalassianWords4), MakeEntry(3, ThalassianWords3),
+        MakeEntry(2, ThalassianWords2), MakeEntry(1, ThalassianWords1)
+    };
+
+    static const WordListEntry DraconicWordTable[] = {
+        MakeEntry(11, DraconicWords11), MakeEntry(10, DraconicWords10), MakeEntry(9, DraconicWords9),
+        MakeEntry(8, DraconicWords8), MakeEntry(7, DraconicWords7), MakeEntry(6, DraconicWords6),
+        MakeEntry(5, DraconicWords5), MakeEntry(4, DraconicWords4), MakeEntry(3, DraconicWords3),
+        MakeEntry(2, DraconicWords2), MakeEntry(1, DraconicWords1)
+    };
+
+    static const WordListEntry KalimagWordTable[] = {
+        MakeEntry(13, KalimagWords13), MakeEntry(12, KalimagWords12), MakeEntry(11, KalimagWords11),
+        MakeEntry(10, KalimagWords10), MakeEntry(9, KalimagWords9), MakeEntry(8, KalimagWords8),
+        MakeEntry(7, KalimagWords7), MakeEntry(6, KalimagWords6), MakeEntry(5, KalimagWords5),
+        MakeEntry(4, KalimagWords4), MakeEntry(3, KalimagWords3), MakeEntry(2, KalimagWords2),
+        MakeEntry(1, KalimagWords1)
+    };
+
+    static const WordListEntry GnomishWordTable[] = {
+        MakeEntry(11, GnomishWords11), MakeEntry(10, GnomishWords10), MakeEntry(9, GnomishWords9),
+        MakeEntry(8, GnomishWords8), MakeEntry(7, GnomishWords7), MakeEntry(6, GnomishWords6),
+        MakeEntry(5, GnomishWords5), MakeEntry(4, GnomishWords4), MakeEntry(3, GnomishWords3),
+        MakeEntry(2, GnomishWords2), MakeEntry(1, GnomishWords1)
+    };
+
+    static const WordListEntry TrollWordTable[] = {
+        MakeEntry(9, TrollWords9), MakeEntry(8, TrollWords8), MakeEntry(7, TrollWords7),
+        MakeEntry(6, TrollWords6), MakeEntry(5, TrollWords5), MakeEntry(4, TrollWords4),
+        MakeEntry(3, TrollWords3), MakeEntry(2, TrollWords2), MakeEntry(1, TrollWords1)
+    };
+
+    static const WordListEntry GutterspeakWordTable[] = {
+        MakeEntry(12, GutterspeakWords12), MakeEntry(11, GutterspeakWords11), MakeEntry(10, GutterspeakWords10),
+        MakeEntry(9, GutterspeakWords9), MakeEntry(8, GutterspeakWords8), MakeEntry(7, GutterspeakWords7),
+        MakeEntry(6, GutterspeakWords6), MakeEntry(5, GutterspeakWords5), MakeEntry(4, GutterspeakWords4),
+        MakeEntry(3, GutterspeakWords3), MakeEntry(2, GutterspeakWords2), MakeEntry(1, GutterspeakWords1)
+    };
+
+    static const WordListEntry DraeneiWordTable[] = {
+        MakeEntry(12, DraeneiWords12), MakeEntry(11, DraeneiWords11), MakeEntry(10, DraeneiWords10),
+        MakeEntry(9, DraeneiWords9), MakeEntry(8, DraeneiWords8), MakeEntry(7, DraeneiWords7),
+        MakeEntry(6, DraeneiWords6), MakeEntry(5, DraeneiWords5), MakeEntry(4, DraeneiWords4),
+        MakeEntry(3, DraeneiWords3), MakeEntry(2, DraeneiWords2), MakeEntry(1, DraeneiWords1)
+    };
+
+    static const WordListEntry CommonWordTable[] = {
+        MakeEntry(12, CommonWords12), MakeEntry(11, CommonWords11), MakeEntry(10, CommonWords10),
+        MakeEntry(9, CommonWords9), MakeEntry(8, CommonWords8), MakeEntry(7, CommonWords7),
+        MakeEntry(6, CommonWords6), MakeEntry(5, CommonWords5), MakeEntry(4, CommonWords4),
+        MakeEntry(3, CommonWords3), MakeEntry(2, CommonWords2), MakeEntry(1, CommonWords1)
+    };
+
+    // Efficient lookup function using pre-sorted tables
+    // Tables are sorted by minLength in descending order, so first match is the correct one
+    template<size_t N>
+    const char* LookupWord(const WordListEntry (&table)[N], size_t wordLength, size_t hash)
+    {
+        for (const auto& entry : table)
+        {
+            if (wordLength >= entry.minLength)
+                return entry.words[hash % entry.wordCount];
+        }
+        // Fallback to last entry (length 1) - should never reach here if table is properly constructed
+        return table[N - 1].words[hash % table[N - 1].wordCount];
+    }
 }
 
 std::string Player::TranslateWordToLanguage(std::string_view word, Language language)
@@ -6158,426 +6293,66 @@ std::string Player::TranslateWordToLanguage(std::string_view word, Language lang
 
     size_t len = word.size();
     
-    // Generate a deterministic hash from the word
+    // Generate a deterministic hash from the word using a simple polynomial rolling hash
     size_t hash = 0;
     for (char c : word)
     {
         hash = hash * 31 + static_cast<unsigned char>(std::tolower(static_cast<unsigned char>(c)));
     }
 
-    std::string result;
-    bool capitalize = !word.empty() && std::isupper(static_cast<unsigned char>(word[0]));
+    bool capitalize = std::isupper(static_cast<unsigned char>(word[0]));
 
-    // Select words based on language and length
+    // Select word using efficient lookup table based on language
+    const char* selectedWord = nullptr;
     switch (language)
     {
         case LANG_ORCISH:
-        {
-            if (len >= 13)
-                result = LanguageWords::SelectWord(LanguageWords::OrcishWords13, hash);
-            else if (len >= 12)
-                result = LanguageWords::SelectWord(LanguageWords::OrcishWords12, hash);
-            else if (len >= 11)
-                result = LanguageWords::SelectWord(LanguageWords::OrcishWords11, hash);
-            else if (len >= 10)
-                result = LanguageWords::SelectWord(LanguageWords::OrcishWords10, hash);
-            else if (len >= 9)
-                result = LanguageWords::SelectWord(LanguageWords::OrcishWords9, hash);
-            else if (len >= 8)
-                result = LanguageWords::SelectWord(LanguageWords::OrcishWords8, hash);
-            else if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::OrcishWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::OrcishWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::OrcishWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::OrcishWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::OrcishWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::OrcishWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::OrcishWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::OrcishWordTable, len, hash);
             break;
-        }
         case LANG_DARNASSIAN:
-        {
-            if (len >= 16)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords17, hash);
-            else if (len >= 15)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords15, hash);
-            else if (len >= 14)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords14, hash);
-            else if (len >= 13)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords13, hash);
-            else if (len >= 12)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords12, hash);
-            else if (len >= 11)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords11, hash);
-            else if (len >= 10)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords10, hash);
-            else if (len >= 9)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords9, hash);
-            else if (len >= 8)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords8, hash);
-            else if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::DarnassianWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::DarnassianWordTable, len, hash);
             break;
-        }
         case LANG_TAURAHE:
-        {
-            if (len >= 15)
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords15, hash);
-            else if (len >= 14)
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords14, hash);
-            else if (len >= 13)
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords13, hash);
-            else if (len >= 11)
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords11, hash);
-            else if (len >= 10)
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords10, hash);
-            else if (len >= 9)
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords9, hash);
-            else if (len >= 8)
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords8, hash);
-            else if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::TauraheWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::TauraheWordTable, len, hash);
             break;
-        }
         case LANG_DWARVISH:
-        {
-            if (len >= 17)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords17, hash);
-            else if (len >= 14)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords14, hash);
-            else if (len >= 13)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords13, hash);
-            else if (len >= 12)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords12, hash);
-            else if (len >= 11)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords11, hash);
-            else if (len >= 10)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords10, hash);
-            else if (len >= 9)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords9, hash);
-            else if (len >= 8)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords8, hash);
-            else if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::DwarvishWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::DwarvishWordTable, len, hash);
             break;
-        }
         case LANG_DEMONIC:
-        {
-            if (len >= 12)
-                result = LanguageWords::SelectWord(LanguageWords::DemonicWords12, hash);
-            else if (len >= 11)
-                result = LanguageWords::SelectWord(LanguageWords::DemonicWords11, hash);
-            else if (len >= 10)
-                result = LanguageWords::SelectWord(LanguageWords::DemonicWords10, hash);
-            else if (len >= 9)
-                result = LanguageWords::SelectWord(LanguageWords::DemonicWords9, hash);
-            else if (len >= 8)
-                result = LanguageWords::SelectWord(LanguageWords::DemonicWords8, hash);
-            else if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::DemonicWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::DemonicWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::DemonicWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::DemonicWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::DemonicWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::DemonicWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::DemonicWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::DemonicWordTable, len, hash);
             break;
-        }
         case LANG_TITAN:
-        {
-            if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::TitanWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::TitanWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::TitanWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::TitanWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::TitanWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::TitanWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::TitanWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::TitanWordTable, len, hash);
             break;
-        }
         case LANG_THALASSIAN:
-        {
-            if (len >= 17)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords17, hash);
-            else if (len >= 16)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords16, hash);
-            else if (len >= 15)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords15, hash);
-            else if (len >= 14)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords14, hash);
-            else if (len >= 13)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords13, hash);
-            else if (len >= 12)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords12, hash);
-            else if (len >= 11)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords11, hash);
-            else if (len >= 10)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords10, hash);
-            else if (len >= 9)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords9, hash);
-            else if (len >= 8)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords8, hash);
-            else if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::ThalassianWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::ThalassianWordTable, len, hash);
             break;
-        }
         case LANG_DRACONIC:
-        {
-            if (len >= 11)
-                result = LanguageWords::SelectWord(LanguageWords::DraconicWords11, hash);
-            else if (len >= 10)
-                result = LanguageWords::SelectWord(LanguageWords::DraconicWords10, hash);
-            else if (len >= 9)
-                result = LanguageWords::SelectWord(LanguageWords::DraconicWords9, hash);
-            else if (len >= 8)
-                result = LanguageWords::SelectWord(LanguageWords::DraconicWords8, hash);
-            else if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::DraconicWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::DraconicWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::DraconicWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::DraconicWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::DraconicWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::DraconicWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::DraconicWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::DraconicWordTable, len, hash);
             break;
-        }
         case LANG_KALIMAG:
-        {
-            if (len >= 13)
-                result = LanguageWords::SelectWord(LanguageWords::KalimagWords13, hash);
-            else if (len >= 12)
-                result = LanguageWords::SelectWord(LanguageWords::KalimagWords12, hash);
-            else if (len >= 11)
-                result = LanguageWords::SelectWord(LanguageWords::KalimagWords11, hash);
-            else if (len >= 10)
-                result = LanguageWords::SelectWord(LanguageWords::KalimagWords10, hash);
-            else if (len >= 9)
-                result = LanguageWords::SelectWord(LanguageWords::KalimagWords9, hash);
-            else if (len >= 8)
-                result = LanguageWords::SelectWord(LanguageWords::KalimagWords8, hash);
-            else if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::KalimagWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::KalimagWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::KalimagWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::KalimagWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::KalimagWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::KalimagWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::KalimagWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::KalimagWordTable, len, hash);
             break;
-        }
         case LANG_GNOMISH:
-        {
-            if (len >= 11)
-                result = LanguageWords::SelectWord(LanguageWords::GnomishWords11, hash);
-            else if (len >= 10)
-                result = LanguageWords::SelectWord(LanguageWords::GnomishWords10, hash);
-            else if (len >= 9)
-                result = LanguageWords::SelectWord(LanguageWords::GnomishWords9, hash);
-            else if (len >= 8)
-                result = LanguageWords::SelectWord(LanguageWords::GnomishWords8, hash);
-            else if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::GnomishWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::GnomishWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::GnomishWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::GnomishWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::GnomishWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::GnomishWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::GnomishWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::GnomishWordTable, len, hash);
             break;
-        }
         case LANG_TROLL:
-        {
-            if (len >= 9)
-                result = LanguageWords::SelectWord(LanguageWords::TrollWords9, hash);
-            else if (len >= 8)
-                result = LanguageWords::SelectWord(LanguageWords::TrollWords8, hash);
-            else if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::TrollWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::TrollWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::TrollWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::TrollWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::TrollWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::TrollWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::TrollWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::TrollWordTable, len, hash);
             break;
-        }
         case LANG_GUTTERSPEAK:
-        {
-            if (len >= 12)
-                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords12, hash);
-            else if (len >= 11)
-                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords11, hash);
-            else if (len >= 10)
-                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords10, hash);
-            else if (len >= 9)
-                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords9, hash);
-            else if (len >= 8)
-                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords8, hash);
-            else if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::GutterspeakWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::GutterspeakWordTable, len, hash);
             break;
-        }
         case LANG_DRAENEI:
-        {
-            if (len >= 12)
-                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords12, hash);
-            else if (len >= 11)
-                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords11, hash);
-            else if (len >= 10)
-                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords10, hash);
-            else if (len >= 9)
-                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords9, hash);
-            else if (len >= 8)
-                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords8, hash);
-            else if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::DraeneiWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::DraeneiWordTable, len, hash);
             break;
-        }
         case LANG_COMMON:
         default:
-        {
             // Common is used as fallback for other languages as well
-            if (len >= 12)
-                result = LanguageWords::SelectWord(LanguageWords::CommonWords12, hash);
-            else if (len >= 11)
-                result = LanguageWords::SelectWord(LanguageWords::CommonWords11, hash);
-            else if (len >= 10)
-                result = LanguageWords::SelectWord(LanguageWords::CommonWords10, hash);
-            else if (len >= 9)
-                result = LanguageWords::SelectWord(LanguageWords::CommonWords9, hash);
-            else if (len >= 8)
-                result = LanguageWords::SelectWord(LanguageWords::CommonWords8, hash);
-            else if (len >= 7)
-                result = LanguageWords::SelectWord(LanguageWords::CommonWords7, hash);
-            else if (len >= 6)
-                result = LanguageWords::SelectWord(LanguageWords::CommonWords6, hash);
-            else if (len >= 5)
-                result = LanguageWords::SelectWord(LanguageWords::CommonWords5, hash);
-            else if (len >= 4)
-                result = LanguageWords::SelectWord(LanguageWords::CommonWords4, hash);
-            else if (len >= 3)
-                result = LanguageWords::SelectWord(LanguageWords::CommonWords3, hash);
-            else if (len >= 2)
-                result = LanguageWords::SelectWord(LanguageWords::CommonWords2, hash);
-            else
-                result = LanguageWords::SelectWord(LanguageWords::CommonWords1, hash);
+            selectedWord = LanguageWords::LookupWord(LanguageWords::CommonWordTable, len, hash);
             break;
-        }
     }
+
+    std::string result(selectedWord);
 
     // Capitalize first letter if original was capitalized
     if (capitalize && !result.empty())
@@ -6590,6 +6365,10 @@ std::string Player::TranslateWordToLanguage(std::string_view word, Language lang
 
 std::string Player::ScrambleTextByComprehension(std::string_view text, float comprehension, Language language) const
 {
+    // Early exit for empty text
+    if (text.empty())
+        return std::string();
+
     // Full comprehension - return original text
     if (comprehension >= 1.0f)
         return std::string(text);
