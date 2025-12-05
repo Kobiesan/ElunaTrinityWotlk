@@ -59,18 +59,16 @@ TEST_CASE("MarkUntranslatedWords", "[Player][Language]")
     SECTION("Partial comprehension creates mixed results")
     {
         // With partial comprehension, some words should be bracketed, others not
+        // The exact result depends on the deterministic threshold calculation
         std::string result = Player::MarkUntranslatedWords("Hello friend, how are you today?", 0.3f);
         
         // Result should contain brackets (some words are unintelligible)
         REQUIRE(result.find('[') != std::string::npos);
         REQUIRE(result.find(']') != std::string::npos);
         
-        // Result should also contain some unbracketed alphabetic text (some words are intelligible)
-        // The word "are" at position 17 with length 3 should be intelligible at 0.3 comprehension
-        // threshold = (17 * 31 + 3 * 17) % 100 / 100 = (527 + 51) % 100 / 100 = 78 / 100 = 0.78
-        // Actually let's just verify the format is correct
-        REQUIRE(result.find(", ") != std::string::npos);  // Punctuation preserved
-        REQUIRE(result.find("?") != std::string::npos);   // Ending punctuation preserved
+        // Punctuation should be preserved
+        REQUIRE(result.find(", ") != std::string::npos);
+        REQUIRE(result.find("?") != std::string::npos);
     }
 
     SECTION("Comprehension above 1.0 treated same as 1.0")

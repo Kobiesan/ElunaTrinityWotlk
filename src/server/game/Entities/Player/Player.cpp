@@ -6479,9 +6479,8 @@ std::string Player::MarkUntranslatedWords(std::string_view text, float comprehen
             }
             else
             {
-                // Partial comprehension - mark untranslated words with brackets
-                // Use the same logic as ScrambleTextByComprehension to determine which words
-                // would be translated (i.e., not intelligible to listeners)
+                // Partial comprehension - use same threshold logic as ScrambleTextByComprehension
+                // Words with threshold >= comprehension would be scrambled/translated for listeners
                 constexpr uint32 POSITION_MULTIPLIER = 31;
                 constexpr uint32 LENGTH_MULTIPLIER = 17;
                 constexpr float THRESHOLD_DIVISOR = 100.0f;
@@ -6489,12 +6488,12 @@ std::string Player::MarkUntranslatedWords(std::string_view text, float comprehen
 
                 if (threshold < comprehension)
                 {
-                    // This word would be revealed (intelligible) - no brackets
+                    // Word would be intelligible to listeners - show without brackets
                     result += word;
                 }
                 else
                 {
-                    // This word would be translated (unintelligible) - mark with brackets
+                    // Word would be unintelligible to listeners - mark with brackets
                     result += '[';
                     result += word;
                     result += ']';
