@@ -1810,6 +1810,7 @@ class TC_GAME_API Player : public Unit, public GridObject<Player>
         bool HasSkill(uint32 skill) const;
         float GetLanguageComprehension(Language language) const;
         std::string ScrambleTextByComprehension(std::string_view text, float comprehension, Language language) const;
+        static std::string MarkUntranslatedWords(std::string_view text, float comprehension);
         static std::string TranslateWordToLanguage(std::string_view word, Language language);
         void LearnSkillRewardedSpells(uint32 skillId, uint32 skillValue);
         uint16 GetSkillLineIdByPos(uint32 pos) const { return GetUInt16Value(PLAYER_SKILL_INFO_1_1 + pos * 3 + SKILL_ID_FIELD_OFFSET, SKILL_ID_SHORT_OFFSET); }
