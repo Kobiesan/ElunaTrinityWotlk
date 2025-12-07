@@ -804,18 +804,23 @@ void Creature::Update(uint32 diff)
                     m_boundaryCheckTime -= diff;
             }
 
-            if (IsEngaged() && IsAlive() && !IsPet() && !IsCharmed() && !IsTotem() && !IsTrigger())
+            if (IsEngaged() && !IsPet() && !IsCharmed() && !IsTotem() && !IsTrigger())
             {
                 // Only check for creatures that can actually call for help
                 if (!GetCharmerOrOwnerGUID().IsPlayer())
                 {
-                    if (diff >= m_assistCheckTime)
+                    if (m_assistCheckTime <= diff)
                     {
                         float radius = sWorld->getFloatConfig(CONFIG_CREATURE_FAMILY_ASSISTANCE_RADIUS);
                         if (radius > 0.0f)
                         {
-                            // Use CallForHelp which directly engages nearby creatures
-                            CallForHelp(radius);
+                            // Only call for help if we have a valid target
+                            if (Unit* victim = GetVictim())
+                            {
+                                Trinity::CallOfHelpCreatureInRangeDo u_do(this, victim, radius);
+                                Trinity::CreatureWorker<Trinity::CallOfHelpCreatureInRangeDo> worker(this, u_do);
+                                Cell::VisitGridObjects(this, worker, radius);
+                            }
                         }
 
                         // Set next assistance check time
@@ -825,11 +830,10 @@ void Creature::Update(uint32 diff)
                         m_assistCheckTime -= diff;
                 }
             }
-            else
+            else if (m_assistCheckTime)
             {
                 // Reset timer when not in combat
-                if (m_assistCheckTime > 0)
-                    m_assistCheckTime = 0;
+                m_assistCheckTime = 0;
             }
 
             // if periodic combat pulse is enabled and we are both in combat and in a dungeon, do this now
@@ -2471,7 +2475,6 @@ bool Creature::CanAssistTo(Unit const* u, Unit const* enemy, bool checkfaction /
             // Also check combat manager for any faction targets
             if (!hasAttackedFaction)
             {
-                std::vector<Unit*> combatTargets;
                 for (auto const& pair : enemy->GetCombatManager().GetPvECombatRefs())
                 {
                     if (Unit* target = pair.second->GetOther(enemy))
@@ -3336,16 +3339,12 @@ void Creature::AtEngage(Unit* target)
         }
     }
 
-    // Initialize assistance check timer to trigger first check after 5 seconds
-    if (!IsPet() && !IsCharmed() && !GetCharmerOrOwnerGUID().IsPlayer() && !IsTotem() && !IsTrigger())
-    {
-        m_assistCheckTime = sWorld->getIntConfig(CONFIG_CREATURE_FAMILY_ASSISTANCE_DELAY);
-    }
-
+    // Initialize assistance check timer to trigger first check based on config value
     // Call for assistance from nearby creatures
     // Only do this for non-player controlled creatures in normal world content
     if (!IsPet() && !IsCharmed() && !GetCharmerOrOwnerGUID().IsPlayer() && !IsTotem() && !IsTrigger())
     {
+        m_assistCheckTime = sWorld->getIntConfig(CONFIG_CREATURE_FAMILY_ASSISTANCE_DELAY);
         CallAssistance();
     }
 
