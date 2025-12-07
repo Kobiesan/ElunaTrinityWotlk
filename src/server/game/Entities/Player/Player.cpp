@@ -6387,7 +6387,7 @@ std::string Player::ScrambleTextByComprehension(std::string_view text, float com
 
     for (size_t i = 0; i <= text.size(); ++i)
     {
-        bool isWordChar = (i < text.size()) && std::isalpha(static_cast<unsigned char>(text[i]));
+        bool isWordChar = (i < text.size()) && (std::isalpha(static_cast<unsigned char>(text[i])) || text[i] == '\'');
 
         if (isWordChar && !inWord)
         {
@@ -6458,7 +6458,7 @@ std::string Player::MarkUntranslatedWords(std::string_view text, float comprehen
 
     for (size_t i = 0; i <= text.size(); ++i)
     {
-        bool isWordChar = (i < text.size()) && std::isalpha(static_cast<unsigned char>(text[i]));
+        bool isWordChar = (i < text.size()) && (std::isalpha(static_cast<unsigned char>(text[i])) || text[i] == '\'');
 
         if (isWordChar && !inWord)
         {

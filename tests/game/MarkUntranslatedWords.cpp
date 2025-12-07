@@ -95,4 +95,22 @@ TEST_CASE("MarkUntranslatedWords", "[Player][Language]")
         REQUIRE(Player::MarkUntranslatedWords("123 456", 0.5f) == "123 456");
         REQUIRE(Player::MarkUntranslatedWords("!@#$%", 0.5f) == "!@#$%");
     }
+
+    SECTION("Words with apostrophes are treated as single words")
+    {
+        // Contractions should be treated as a single word
+        REQUIRE(Player::MarkUntranslatedWords("doesn't", 0.0f) == "[doesn't]");
+        REQUIRE(Player::MarkUntranslatedWords("I don't know", 0.0f) == "[I] [don't] [know]");
+        REQUIRE(Player::MarkUntranslatedWords("It's working", 0.0f) == "[It's] [working]");
+        REQUIRE(Player::MarkUntranslatedWords("can't won't shouldn't", 0.0f) == "[can't] [won't] [shouldn't]");
+        
+        // Possessives should also be treated as single words
+        REQUIRE(Player::MarkUntranslatedWords("John's hat", 0.0f) == "[John's] [hat]");
+        
+        // Multiple apostrophes in different words
+        REQUIRE(Player::MarkUntranslatedWords("I'm sure it's fine", 0.0f) == "[I'm] [sure] [it's] [fine]");
+        
+        // Apostrophe with punctuation
+        REQUIRE(Player::MarkUntranslatedWords("That's great!", 0.0f) == "[That's] [great]!");
+    }
 }
