@@ -183,17 +183,30 @@ void WorldSession::HandleLootMoneyOpcode(WorldPacket& /*recvData*/)
                     playersNear.push_back(member);
             }
 
-            uint32 goldPerPlayer = uint32((loot->gold) / (playersNear.size()));
-
-            for (std::vector<Player*>::const_iterator i = playersNear.begin(); i != playersNear.end(); ++i)
+            if (playersNear.empty())
             {
-                (*i)->ModifyMoney(goldPerPlayer);
-                (*i)->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LOOT_MONEY, goldPerPlayer);
+                player->ModifyMoney(loot->gold);
+                player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LOOT_MONEY, loot->gold);
 
                 WorldPacket data(SMSG_LOOT_MONEY_NOTIFY, 4 + 1);
-                data << uint32(goldPerPlayer);
-                data << uint8(playersNear.size() <= 1); // Controls the text displayed in chat. 0 is "Your share is..." and 1 is "You loot..."
-                (*i)->SendDirectMessage(&data);
+                data << uint32(loot->gold);
+                data << uint8(1);   // "You loot..."
+                SendPacket(&data);
+            }
+            else
+            {
+                uint32 goldPerPlayer = uint32((loot->gold) / (playersNear.size()));
+
+                for (std::vector<Player*>::const_iterator i = playersNear.begin(); i != playersNear.end(); ++i)
+                {
+                    (*i)->ModifyMoney(goldPerPlayer);
+                    (*i)->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LOOT_MONEY, goldPerPlayer);
+
+                    WorldPacket data(SMSG_LOOT_MONEY_NOTIFY, 4 + 1);
+                    data << uint32(goldPerPlayer);
+                    data << uint8(playersNear.size() <= 1); // Controls the text displayed in chat. 0 is "Your share is..." and 1 is "You loot..."
+                    (*i)->SendDirectMessage(&data);
+                }
             }
         }
         else
