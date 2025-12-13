@@ -23623,70 +23623,88 @@ void Player::LearnDefaultSkill(uint32 skillId, uint16 rank)
         if (tier)
         {
             uint16 maxValue = tier->Value[std::max<int32>(rank - 1, 0)];
-            uint16 skillValue = 1;
-            //uint16 skillValue = maxValue; // Start at max value for the configured rank
+            uint16 skillValue = maxValue; // Start at max value for the configured rank
 
             // Check for race-specific overrides
             switch (GetRace())
             {
-            case RACE_GNOME:
-                if (skillId == SKILL_LANG_DWARVEN) // Gnomes know some Dwarvish
-                    skillValue = 50;
-                if (skillId == SKILL_LANG_COMMON)
-                    skillValue = 300;
-                break;
+                case RACE_GNOME:
+                    if (skillId == SKILL_LANG_DWARVEN) // Gnomes know some Dwarvish
+                        skillValue = 50;
+                    if (skillId == SKILL_LANG_COMMON)
+                        skillValue = 300;
+                    break;
 
-            case RACE_DWARF:
-                if (skillId == SKILL_LANG_GNOMISH) // Dwarves know some Gnomish
-                    skillValue = 50;
-                if (skillId == SKILL_LANG_COMMON)
-                    skillValue = 300;
-                break;
+                case RACE_DWARF:
+                    if (skillId == SKILL_LANG_GNOMISH) // Dwarves know some Gnomish
+                        skillValue = 50;
+                    else if (skillId == SKILL_LANG_COMMON)
+                        skillValue = 300;
+                    break;
 
-            case RACE_HUMAN:
-                if (skillId == SKILL_LANG_COMMON)
-                    skillValue = 300;
-                break;
+                case RACE_HUMAN:
+                    if (skillId == SKILL_LANG_COMMON)
+                        skillValue = 300;
+                    break;
 
-            case RACE_NIGHTELF:
-                if (skillId == SKILL_LANG_COMMON)
-                    skillValue = 275;
-                break;
+                case RACE_NIGHTELF:
+                    if (skillId == SKILL_LANG_COMMON)
+                        skillValue = 275;
+                    if (skillId == SKILL_LANG_THALASSIAN)
+                        skillValue = 50;
+                    break;
 
-            case RACE_DRAENEI:
-                if (skillId == SKILL_LANG_COMMON)
-                    skillValue = 200;
-                break;
+                case RACE_DRAENEI:
+                    if (skillId == SKILL_LANG_COMMON)
+                        skillValue = 200;
+                    break;
 
-            case RACE_ORC:
-                if (skillId == SKILL_LANG_TROLL) // Orcs know some Troll
-                    skillValue = 50;
-                if (skillId == SKILL_LANG_ORCISH)
-                    skillValue = 300;
-                break;
+                case RACE_ORC:
+                    if (skillId == SKILL_LANG_TROLL) // Orcs know some Troll
+                        skillValue = 50;
+                    if (skillId == SKILL_LANG_ORCISH)
+                        skillValue = 300;
+                    break;
 
-            case RACE_TROLL:
-                if (skillId == SKILL_LANG_ORCISH)
-                    skillValue = 300;
-                break;
+                case RACE_TROLL:
+                    if (skillId == SKILL_LANG_ORCISH)
+                        skillValue = 300;
+                    break;
 
-            case RACE_UNDEAD_PLAYER:
-                if (skillId == SKILL_LANG_ORCISH)
-                    skillValue = 250;
-                break;
+                case RACE_UNDEAD_PLAYER:
+                    if (skillId == SKILL_LANG_ORCISH)
+                        skillValue = 250;
+                    if (skillId == SKILL_LANG_COMMON)
+                        skillValue = 300;
+                    break;
 
-            case RACE_BLOODELF:
-                if (skillId == SKILL_LANG_ORCISH)
-                    skillValue = 200;
-                break;
+                case RACE_BLOODELF:
+                    if (skillId == SKILL_LANG_ORCISH)
+                        skillValue = 200;
+                    if (skillId == SKILL_LANG_DARNASSIAN)
+                        skillValue = 50;
+                    break;
 
-            default:
-                // Use default rank-based logic
-                if (rcInfo->Flags & SKILL_FLAG_ALWAYS_MAX_VALUE)
-                    skillValue = maxValue;
-                else
-                    skillValue = std::min(std::max<uint16>({ uint16(1), uint16((GetLevel() - 1) * 5) }), maxValue);
-                break;
+                default:
+                    // Use default rank-based logic
+                    if (rcInfo->Flags & SKILL_FLAG_ALWAYS_MAX_VALUE)
+                        skillValue = maxValue;
+                    else
+                        skillValue = std::min(std::max<uint16>({ uint16(1), uint16((GetLevel() - 1) * 5) }), maxValue);
+                    break;
+            }
+
+            switch (GetClass())
+            {
+                case CLASS_WARLOCK:
+                    if (skillId == SKILL_LANG_DEMON_TONGUE)
+                        skillValue = 50;
+                    break;
+
+                case CLASS_SHAMAN:
+                    if (skillId == SKILL_LANG_KALIMAG)
+                        skillValue = 50;
+                    break;
             }
 
             SetSkill(skillId, rank, skillValue, maxValue);
