@@ -23631,20 +23631,11 @@ void Player::LearnDefaultSkill(uint32 skillId, uint16 rank)
                 case RACE_GNOME:
                     if (skillId == SKILL_LANG_DWARVEN) // Gnomes know some Dwarvish
                         skillValue = 50;
-                    if (skillId == SKILL_LANG_COMMON)
-                        skillValue = 300;
                     break;
 
                 case RACE_DWARF:
                     if (skillId == SKILL_LANG_GNOMISH) // Dwarves know some Gnomish
                         skillValue = 50;
-                    else if (skillId == SKILL_LANG_COMMON)
-                        skillValue = 300;
-                    break;
-
-                case RACE_HUMAN:
-                    if (skillId == SKILL_LANG_COMMON)
-                        skillValue = 300;
                     break;
 
                 case RACE_NIGHTELF:
@@ -23662,20 +23653,11 @@ void Player::LearnDefaultSkill(uint32 skillId, uint16 rank)
                 case RACE_ORC:
                     if (skillId == SKILL_LANG_TROLL) // Orcs know some Troll
                         skillValue = 50;
-                    if (skillId == SKILL_LANG_ORCISH)
-                        skillValue = 300;
-                    break;
-
-                case RACE_TROLL:
-                    if (skillId == SKILL_LANG_ORCISH)
-                        skillValue = 300;
                     break;
 
                 case RACE_UNDEAD_PLAYER:
                     if (skillId == SKILL_LANG_ORCISH)
                         skillValue = 250;
-                    if (skillId == SKILL_LANG_COMMON)
-                        skillValue = 300;
                     break;
 
                 case RACE_BLOODELF:
@@ -23683,6 +23665,11 @@ void Player::LearnDefaultSkill(uint32 skillId, uint16 rank)
                         skillValue = 200;
                     if (skillId == SKILL_LANG_DARNASSIAN)
                         skillValue = 50;
+                    break;
+
+                case RACE_HUMAN:
+                case RACE_TROLL:
+                case RACE_TAUREN:
                     break;
 
                 default:
