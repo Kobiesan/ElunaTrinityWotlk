@@ -423,9 +423,42 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
                     return;
 #endif
 
-            WorldPacket data;
-            ChatHandler::BuildChatPacket(data, ChatMsg(type), Language(lang), sender, nullptr, msg);
-            group->BroadcastPacket(&data, false, group->GetMemberGroup(GetPlayer()->GetGUID()));
+            // Apply language comprehension system for non-universal languages
+            if (lang != LANG_UNIVERSAL && lang != LANG_ADDON)
+            {
+                float speakerComprehension = sender->GetLanguageComprehension(Language(lang));
+
+                // Send to self with marked words showing what wouldn't be understood
+                std::string selfText = Player::MarkUntranslatedWords(msg, speakerComprehension);
+                WorldPacket dataSelf;
+                ChatHandler::BuildChatPacket(dataSelf, ChatMsg(type), Language(lang), sender, nullptr, selfText);
+                sender->SendDirectMessage(&dataSelf);
+
+                // Send to each group member with comprehension-based scrambling
+                int groupIndex = group->GetMemberGroup(GetPlayer()->GetGUID());
+                for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+                {
+                    Player* member = itr->GetSource();
+                    if (!member || member == sender || !member->GetSession())
+                        continue;
+                    if (groupIndex != -1 && itr->getSubGroup() != groupIndex)
+                        continue;
+
+                    float listenerComprehension = member->GetLanguageComprehension(Language(lang));
+                    float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+                    std::string customText = sender->ScrambleTextByComprehension(msg, effectiveComprehension, Language(lang));
+
+                    WorldPacket data;
+                    ChatHandler::BuildChatPacket(data, ChatMsg(type), Language(lang), sender, nullptr, customText);
+                    member->SendDirectMessage(&data);
+                }
+            }
+            else
+            {
+                WorldPacket data;
+                ChatHandler::BuildChatPacket(data, ChatMsg(type), Language(lang), sender, nullptr, msg);
+                group->BroadcastPacket(&data, false, group->GetMemberGroup(GetPlayer()->GetGUID()));
+            }
             break;
         }
         case CHAT_MSG_GUILD:
@@ -441,7 +474,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
                             return;
 #endif
 
-                    guild->BroadcastToGuild(this, false, msg, lang == LANG_ADDON ? LANG_ADDON : LANG_UNIVERSAL);
+                    guild->BroadcastToGuild(this, false, msg, lang);
                 }
             }
             break;
@@ -459,7 +492,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
                             return;
 #endif
 
-                    guild->BroadcastToGuild(this, true, msg, lang == LANG_ADDON ? LANG_ADDON : LANG_UNIVERSAL);
+                    guild->BroadcastToGuild(this, true, msg, lang);
                 }
             }
             break;
@@ -482,9 +515,39 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
                     return;
 #endif
 
-            WorldPacket data;
-            ChatHandler::BuildChatPacket(data, CHAT_MSG_RAID, Language(lang), sender, nullptr, msg);
-            group->BroadcastPacket(&data, false);
+            // Apply language comprehension system for non-universal languages
+            if (lang != LANG_UNIVERSAL && lang != LANG_ADDON)
+            {
+                float speakerComprehension = sender->GetLanguageComprehension(Language(lang));
+
+                // Send to self with marked words showing what wouldn't be understood
+                std::string selfText = Player::MarkUntranslatedWords(msg, speakerComprehension);
+                WorldPacket dataSelf;
+                ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_RAID, Language(lang), sender, nullptr, selfText);
+                sender->SendDirectMessage(&dataSelf);
+
+                // Send to each group member with comprehension-based scrambling
+                for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+                {
+                    Player* member = itr->GetSource();
+                    if (!member || member == sender || !member->GetSession())
+                        continue;
+
+                    float listenerComprehension = member->GetLanguageComprehension(Language(lang));
+                    float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+                    std::string customText = sender->ScrambleTextByComprehension(msg, effectiveComprehension, Language(lang));
+
+                    WorldPacket data;
+                    ChatHandler::BuildChatPacket(data, CHAT_MSG_RAID, Language(lang), sender, nullptr, customText);
+                    member->SendDirectMessage(&data);
+                }
+            }
+            else
+            {
+                WorldPacket data;
+                ChatHandler::BuildChatPacket(data, CHAT_MSG_RAID, Language(lang), sender, nullptr, msg);
+                group->BroadcastPacket(&data, false);
+            }
             break;
         }
         case CHAT_MSG_RAID_LEADER:
@@ -505,9 +568,39 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
                     return;
 #endif
 
-            WorldPacket data;
-            ChatHandler::BuildChatPacket(data, CHAT_MSG_RAID_LEADER, Language(lang), sender, nullptr, msg);
-            group->BroadcastPacket(&data, false);
+            // Apply language comprehension system for non-universal languages
+            if (lang != LANG_UNIVERSAL && lang != LANG_ADDON)
+            {
+                float speakerComprehension = sender->GetLanguageComprehension(Language(lang));
+
+                // Send to self with marked words showing what wouldn't be understood
+                std::string selfText = Player::MarkUntranslatedWords(msg, speakerComprehension);
+                WorldPacket dataSelf;
+                ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_RAID_LEADER, Language(lang), sender, nullptr, selfText);
+                sender->SendDirectMessage(&dataSelf);
+
+                // Send to each group member with comprehension-based scrambling
+                for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+                {
+                    Player* member = itr->GetSource();
+                    if (!member || member == sender || !member->GetSession())
+                        continue;
+
+                    float listenerComprehension = member->GetLanguageComprehension(Language(lang));
+                    float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+                    std::string customText = sender->ScrambleTextByComprehension(msg, effectiveComprehension, Language(lang));
+
+                    WorldPacket data;
+                    ChatHandler::BuildChatPacket(data, CHAT_MSG_RAID_LEADER, Language(lang), sender, nullptr, customText);
+                    member->SendDirectMessage(&data);
+                }
+            }
+            else
+            {
+                WorldPacket data;
+                ChatHandler::BuildChatPacket(data, CHAT_MSG_RAID_LEADER, Language(lang), sender, nullptr, msg);
+                group->BroadcastPacket(&data, false);
+            }
             break;
         }
         case CHAT_MSG_RAID_WARNING:
@@ -523,10 +616,41 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
                     return;
 #endif
 
-            WorldPacket data;
-            //in battleground, raid warning is sent only to players in battleground - code is ok
-            ChatHandler::BuildChatPacket(data, CHAT_MSG_RAID_WARNING, Language(lang), sender, nullptr, msg);
-            group->BroadcastPacket(&data, false);
+            // Apply language comprehension system for non-universal languages
+            if (lang != LANG_UNIVERSAL && lang != LANG_ADDON)
+            {
+                float speakerComprehension = sender->GetLanguageComprehension(Language(lang));
+
+                // Send to self with marked words showing what wouldn't be understood
+                std::string selfText = Player::MarkUntranslatedWords(msg, speakerComprehension);
+                WorldPacket dataSelf;
+                ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_RAID_WARNING, Language(lang), sender, nullptr, selfText);
+                sender->SendDirectMessage(&dataSelf);
+
+                // Send to each group member with comprehension-based scrambling
+                for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+                {
+                    Player* member = itr->GetSource();
+                    if (!member || member == sender || !member->GetSession())
+                        continue;
+
+                    float listenerComprehension = member->GetLanguageComprehension(Language(lang));
+                    float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+                    std::string customText = sender->ScrambleTextByComprehension(msg, effectiveComprehension, Language(lang));
+
+                    WorldPacket data;
+                    //in battleground, raid warning is sent only to players in battleground - code is ok
+                    ChatHandler::BuildChatPacket(data, CHAT_MSG_RAID_WARNING, Language(lang), sender, nullptr, customText);
+                    member->SendDirectMessage(&data);
+                }
+            }
+            else
+            {
+                WorldPacket data;
+                //in battleground, raid warning is sent only to players in battleground - code is ok
+                ChatHandler::BuildChatPacket(data, CHAT_MSG_RAID_WARNING, Language(lang), sender, nullptr, msg);
+                group->BroadcastPacket(&data, false);
+            }
             break;
         }
         case CHAT_MSG_BATTLEGROUND:
@@ -543,9 +667,39 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
                     return;
 #endif
 
-            WorldPacket data;
-            ChatHandler::BuildChatPacket(data, CHAT_MSG_BATTLEGROUND, Language(lang), sender, nullptr, msg);
-            group->BroadcastPacket(&data, false);
+            // Apply language comprehension system for non-universal languages
+            if (lang != LANG_UNIVERSAL && lang != LANG_ADDON)
+            {
+                float speakerComprehension = sender->GetLanguageComprehension(Language(lang));
+
+                // Send to self with marked words showing what wouldn't be understood
+                std::string selfText = Player::MarkUntranslatedWords(msg, speakerComprehension);
+                WorldPacket dataSelf;
+                ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_BATTLEGROUND, Language(lang), sender, nullptr, selfText);
+                sender->SendDirectMessage(&dataSelf);
+
+                // Send to each group member with comprehension-based scrambling
+                for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+                {
+                    Player* member = itr->GetSource();
+                    if (!member || member == sender || !member->GetSession())
+                        continue;
+
+                    float listenerComprehension = member->GetLanguageComprehension(Language(lang));
+                    float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+                    std::string customText = sender->ScrambleTextByComprehension(msg, effectiveComprehension, Language(lang));
+
+                    WorldPacket data;
+                    ChatHandler::BuildChatPacket(data, CHAT_MSG_BATTLEGROUND, Language(lang), sender, nullptr, customText);
+                    member->SendDirectMessage(&data);
+                }
+            }
+            else
+            {
+                WorldPacket data;
+                ChatHandler::BuildChatPacket(data, CHAT_MSG_BATTLEGROUND, Language(lang), sender, nullptr, msg);
+                group->BroadcastPacket(&data, false);
+            }
             break;
         }
         case CHAT_MSG_BATTLEGROUND_LEADER:
@@ -562,9 +716,39 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
                     return;
 #endif
 
-            WorldPacket data;
-            ChatHandler::BuildChatPacket(data, CHAT_MSG_BATTLEGROUND_LEADER, Language(lang), sender, nullptr, msg);;
-            group->BroadcastPacket(&data, false);
+            // Apply language comprehension system for non-universal languages
+            if (lang != LANG_UNIVERSAL && lang != LANG_ADDON)
+            {
+                float speakerComprehension = sender->GetLanguageComprehension(Language(lang));
+
+                // Send to self with marked words showing what wouldn't be understood
+                std::string selfText = Player::MarkUntranslatedWords(msg, speakerComprehension);
+                WorldPacket dataSelf;
+                ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_BATTLEGROUND_LEADER, Language(lang), sender, nullptr, selfText);
+                sender->SendDirectMessage(&dataSelf);
+
+                // Send to each group member with comprehension-based scrambling
+                for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+                {
+                    Player* member = itr->GetSource();
+                    if (!member || member == sender || !member->GetSession())
+                        continue;
+
+                    float listenerComprehension = member->GetLanguageComprehension(Language(lang));
+                    float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+                    std::string customText = sender->ScrambleTextByComprehension(msg, effectiveComprehension, Language(lang));
+
+                    WorldPacket data;
+                    ChatHandler::BuildChatPacket(data, CHAT_MSG_BATTLEGROUND_LEADER, Language(lang), sender, nullptr, customText);
+                    member->SendDirectMessage(&data);
+                }
+            }
+            else
+            {
+                WorldPacket data;
+                ChatHandler::BuildChatPacket(data, CHAT_MSG_BATTLEGROUND_LEADER, Language(lang), sender, nullptr, msg);
+                group->BroadcastPacket(&data, false);
+            }
             break;
         }
         case CHAT_MSG_CHANNEL:
