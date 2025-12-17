@@ -1336,7 +1336,8 @@ enum SpellCustomErrors
     SPELL_CUSTOM_ERROR_ORGRIMMARORDARKSPEAR_NEUTRAL    = 105,// You must be at least Neutral with Orgrimmar or Darkspear Trolls to use that.
     SPELL_CUSTOM_ERROR_THUNDERBLUFF_NEUTRAL            = 106,// You must be at least Neutral with Thunder Bluff to use that.
     SPELL_CUSTOM_ERROR_UNDERCITY_NEUTRAL               = 107,// You must be at least Neutral with Undercity to use that.
-    SPELL_CUSTOM_ERROR_SILVERMOONCITY_NEUTRAL          = 108 // You must be at least Neutral with Silvermoon City to use that.
+    SPELL_CUSTOM_ERROR_SILVERMOONCITY_NEUTRAL          = 108,// You must be at least Neutral with Silvermoon City to use that.
+    SPELL_CUSTOM_ERROR_LANGUAGE_TOO_HIGH               = 109 // Your comprehension has surpassed this rudimentary text. 
 };
 
 enum StealthType
@@ -2934,7 +2935,21 @@ enum QuestSort
     QUEST_SORT_JEWELCRAFTING                    = 373,
     QUEST_SORT_NOBLEGARDEN                      = 374,
     QUEST_SORT_PILGRIMS_BOUNTY                  = 375,
-    QUEST_SORT_LOVE_IS_IN_THE_AIR               = 376
+    QUEST_SORT_LOVE_IS_IN_THE_AIR               = 376,
+    QUEST_SORT_LANGUAGE_COMMON                  = 377,
+    QUEST_SORT_LANGUAGE_DWARVISH                = 378,
+    QUEST_SORT_LANGUAGE_GNOMISH                 = 379,
+    QUEST_SORT_LANGUAGE_DARNASSIAN              = 380,
+    QUEST_SORT_LANGUAGE_DRAENEI                 = 381,
+    QUEST_SORT_LANGUAGE_ORCISH                  = 382,
+    QUEST_SORT_LANGUAGE_TROLL                   = 383,
+    QUEST_SORT_LANGUAGE_TAURAHE                 = 384,
+    QUEST_SORT_LANGUAGE_GUTTERSPEAK             = 385,
+    QUEST_SORT_LANGUAGE_THALASSIAN              = 386,
+    QUEST_SORT_LANGUAGE_DRACONIC                = 387,
+    QUEST_SORT_LANGUAGE_DEMONIC                 = 388,
+    QUEST_SORT_LANGUAGE_TITAN                   = 389,
+    QUEST_SORT_LANGUAGE_KALIMAG                 = 390
 };
 
 constexpr uint8 ClassByQuestSort(int32 QuestSort)

@@ -4737,6 +4737,39 @@ class spell_gen_submerged : public SpellScript
     }
 };
 
+class spell_increase_skill_point : public SpellScript
+{
+    PrepareSpellScript(spell_increase_skill_point);
+
+    void HandleScript(SpellEffIndex /*effIndex*/)
+    {
+        if (Player* player = GetHitPlayer())
+        {
+            uint32 skillId = GetEffectInfo().MiscValue;
+            int32 amount = GetEffectValue(); // BasePoints
+            int32 skillCap = GetEffectInfo().MiscValueB; // Maximum skill level this spell can increase to
+
+            uint16 currentValue = player->GetSkillValue(skillId);
+            uint16 maxValue = player->GetMaxSkillValue(skillId);
+
+            // If skillCap is set, use it as the ceiling; otherwise use maxValue
+            uint16 effectiveMax = skillCap > 0 ? std::min<uint16>(skillCap, maxValue) : maxValue;
+
+            // Only increase if player has the skill and is below the effective cap
+            if (currentValue && currentValue < effectiveMax)
+            {
+                uint16 newValue = std::min<uint16>(currentValue + amount, effectiveMax);
+                player->SetSkill(skillId, player->GetSkillStep(skillId), newValue, maxValue);
+            }
+        }
+    }
+
+    void Register() override
+    {
+        OnEffectHitTarget += SpellEffectFn(spell_increase_skill_point::HandleScript, EFFECT_0, SPELL_EFFECT_SCRIPT_EFFECT);
+    }
+};
+
 void AddSC_generic_spell_scripts()
 {
     RegisterSpellScript(spell_gen_absorb0_hitlimit1);
@@ -4890,4 +4923,5 @@ void AddSC_generic_spell_scripts()
     RegisterSpellScript(spell_gen_charmed_unit_spell_cooldown);
     RegisterSpellScript(spell_gen_cannon_blast);
     RegisterSpellScript(spell_gen_submerged);
+    RegisterSpellScript(spell_increase_skill_point);
 }
