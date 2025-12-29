@@ -564,7 +564,8 @@ inline bool IsProfessionSkill(uint32 skill)
         || skill == SKILL_LANG_DRACONIC || skill == SKILL_LANG_DRAENEI || skill == SKILL_LANG_DWARVEN
         || skill == SKILL_LANG_GNOMISH || skill == SKILL_LANG_GUTTERSPEAK || skill == SKILL_LANG_KALIMAG
         || skill == SKILL_LANG_OLD_TONGUE || skill == SKILL_LANG_ORCISH || skill == SKILL_LANG_TAURAHE
-        || skill == SKILL_LANG_THALASSIAN || skill == SKILL_LANG_TITAN || skill == SKILL_LANG_TROLL;
+        || skill == SKILL_LANG_THALASSIAN || skill == SKILL_LANG_TITAN || skill == SKILL_LANG_TROLL
+        || skill == SKILL_LANG_SCOURGE || skill == SKILL_LANG_NERUBIAN;
 }
 
 inline bool IsProfessionOrRidingSkill(uint32 skill)

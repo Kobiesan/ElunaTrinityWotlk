@@ -57,6 +57,8 @@ enum eTradeskill
     TRADESKILL_DRACONIC                 = 27,
     TRADESKILL_TITAN                    = 28,
     TRADESKILL_KALIMAG                  = 29,
+    TRADESKILL_SCOURGE                  = 30,
+    TRADESKILL_NERUBIAN                 = 31,
 
     TRADESKILL_LEVEL_NONE               = 0,
     TRADESKILL_LEVEL_APPRENTICE         = 1,

@@ -832,6 +832,8 @@ enum Language
     LANG_KALIMAG           = 12,
     LANG_GNOMISH           = 13,
     LANG_TROLL             = 14,
+    LANG_SCOURGE           = 15,
+    LANG_NERUBIAN          = 16,
     LANG_GUTTERSPEAK       = 33,
     LANG_DRAENEI           = 35,
     LANG_ZOMBIE            = 36,
@@ -840,7 +842,7 @@ enum Language
     LANG_ADDON             = 0xFFFFFFFF // used by addons, in 2.4.0 not exist, replaced by messagetype?
 };
 
-#define LANGUAGES_COUNT   19
+#define LANGUAGES_COUNT   21
 
 enum TeamId
 {
@@ -2949,7 +2951,9 @@ enum QuestSort
     QUEST_SORT_LANGUAGE_DRACONIC                = 387,
     QUEST_SORT_LANGUAGE_DEMONIC                 = 388,
     QUEST_SORT_LANGUAGE_TITAN                   = 389,
-    QUEST_SORT_LANGUAGE_KALIMAG                 = 390
+    QUEST_SORT_LANGUAGE_KALIMAG                 = 390,
+    QUEST_SORT_LANGUAGE_SCOURGE                 = 391,
+    QUEST_SORT_LANGUAGE_NERUBIAN                = 392
 };
 
 constexpr uint8 ClassByQuestSort(int32 QuestSort)
@@ -3124,10 +3128,12 @@ enum SkillType
     SKILL_PET_EXOTIC_RHINO                          = 786,
     SKILL_PET_EXOTIC_CORE_HOUND                     = 787,
     SKILL_PET_EXOTIC_SPIRIT_BEAST                   = 788,
-	SKILL_LANG_KALIMAG                              = 789
+	SKILL_LANG_KALIMAG                              = 789,
+    SKILL_LANG_SCOURGE                              = 790,
+    SKILL_LANG_NERUBIAN                             = 791
 };
 
-#define MAX_SKILL_TYPE                                789
+#define MAX_SKILL_TYPE                                791
 
 constexpr SkillType SkillByLockType(LockType locktype)
 {

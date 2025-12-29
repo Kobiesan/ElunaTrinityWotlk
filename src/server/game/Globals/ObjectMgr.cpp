@@ -170,6 +170,8 @@ LanguageDesc lang_description[LANGUAGES_COUNT] =
     { LANG_KALIMAG,     91723, SKILL_LANG_KALIMAG      },
     { LANG_GNOMISH,      7340, SKILL_LANG_GNOMISH      },
     { LANG_TROLL,        7341, SKILL_LANG_TROLL        },
+    { LANG_SCOURGE,     91743, SKILL_LANG_SCOURGE      },
+    { LANG_NERUBIAN,    91744, SKILL_LANG_NERUBIAN     },
     { LANG_GUTTERSPEAK, 17737, SKILL_LANG_GUTTERSPEAK  },
     { LANG_DRAENEI,     29932, SKILL_LANG_DRAENEI      },
     { LANG_ZOMBIE,          0, 0                       },
