@@ -3133,7 +3133,7 @@ enum SkillType
     SKILL_LANG_NERUBIAN                             = 791
 };
 
-#define MAX_SKILL_TYPE                                791
+#define MAX_SKILL_TYPE                                792
 
 constexpr SkillType SkillByLockType(LockType locktype)
 {
