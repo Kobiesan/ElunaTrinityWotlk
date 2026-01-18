@@ -1339,7 +1339,10 @@ enum SpellCustomErrors
     SPELL_CUSTOM_ERROR_THUNDERBLUFF_NEUTRAL            = 106,// You must be at least Neutral with Thunder Bluff to use that.
     SPELL_CUSTOM_ERROR_UNDERCITY_NEUTRAL               = 107,// You must be at least Neutral with Undercity to use that.
     SPELL_CUSTOM_ERROR_SILVERMOONCITY_NEUTRAL          = 108,// You must be at least Neutral with Silvermoon City to use that.
-    SPELL_CUSTOM_ERROR_LANGUAGE_TOO_HIGH               = 109 // Your comprehension has surpassed this rudimentary text. 
+    SPELL_CUSTOM_ERROR_LANGUAGE_TOO_HIGH               = 109,// Your comprehension has surpassed this rudimentary text.
+    SPELL_CUSTOM_ERROR_INTERMEDIATE_LANGUAGE           = 110,// You must have intermediate proficiency in this language to study this text.
+    SPELL_CUSTOM_ERROR_ADVANCED_LANGUAGE               = 111,// You must have advanced proficiency in this language to study this text.
+    SPELL_CUSTOM_ERROR_FLUENT_LANGUAGE                 = 112,// You must have fluent proficiency in this language to study this text.
 };
 
 enum StealthType
