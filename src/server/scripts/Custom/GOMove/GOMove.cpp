@@ -29,6 +29,11 @@ http://rochet2.github.io/
 #include "ObjectAccessor.h"
 #include "DBCStores.h"
 
+// Tolerance for floating-point comparison of radians. This value is small enough
+// to detect intentional orientation changes (minimum step is 0.01 radians from UI)
+// but large enough to handle typical float precision errors (~1e-6 to 1e-7).
+static const float ORIENTATION_EPSILON = 0.0001f;
+
 GameObjectStore GOMove::Store;
 
 void GOMove::SendAddonMessage(Player * player, const char * msg)
@@ -166,10 +171,32 @@ GameObject * GOMove::MoveGameObject(Player* player, float x, float y, float z, f
     if (!MapManager::IsValidMapCoord(object->GetMapId(), x, y, z))
         return nullptr;
 
+    // Get current rotation to preserve pitch and roll
+    QuaternionData rot = object->GetLocalRotation();
+    float currentO, currentPitch, currentRoll;
+    rot.toEulerAnglesZYX(currentO, currentPitch, currentRoll);
+
+    // Determine the orientation to use: if the passed orientation is close to the
+    // quaternion's orientation (position-only move), use the quaternion's value to
+    // avoid floating point discrepancies that can invert pitch/roll.
+    // If orientation is intentionally changing, calculate the delta and apply it.
+    float orientationToUse;
+    float orientationDelta = o - object->GetOrientation();
+    if (fabs(orientationDelta) < ORIENTATION_EPSILON)
+    {
+        // Position-only move: preserve exact quaternion orientation
+        orientationToUse = currentO;
+    }
+    else
+    {
+        // Orientation change: apply the delta to the quaternion's orientation
+        orientationToUse = currentO + orientationDelta;
+    }
+
     // copy paste .gob move command
     // copy paste .gob turn command
-    object->Relocate(x, y, z, o);
-    object->SetLocalRotationAngles(o, 0, 0);
+    object->Relocate(x, y, z, orientationToUse);
+    object->SetLocalRotationAngles(orientationToUse, currentPitch, currentRoll);
     object->SaveToDB();
 
     // Generate a completely new spawn with new guid
