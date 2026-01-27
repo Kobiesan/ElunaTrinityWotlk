@@ -683,8 +683,11 @@ void Channel::Say(ObjectGuid guid, std::string const& what, uint32 lang) const
         return;
 
     // TODO: Add proper RBAC check
-    if (sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_CHANNEL))
-        lang = LANG_UNIVERSAL;
+    //if (sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_CHANNEL))
+    //    lang = LANG_UNIVERSAL;
+    
+    // Note: CONFIG_ALLOW_TWO_SIDE_INTERACTION_CHANNEL allows cross - faction channel chat
+    // but we no longer force LANG_UNIVERSAL here to preserve the language comprehension system.
 
     if (!IsOn(guid))
     {

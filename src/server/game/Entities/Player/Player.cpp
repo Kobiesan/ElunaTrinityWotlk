@@ -5956,7 +5956,7 @@ namespace LanguageWords
     // Orcish language words (Language 1)
     static const char* const OrcishWords1[] = { "a", "n", "g", "o", "l"};
     static const char* const OrcishWords2[] = { "ha", "ko", "no", "mu", "ag", "ka", "gi", "il", "lo" };
-    static const char* const OrcishWords3[] = { "lok", "tar", "kaz", "ruk", "kek", "mog", "zug", "gul", "nuk", "aaz", "kil", "ogg" };
+    static const char* const OrcishWords3[] = { "lok", "tar", "kaz", "ruk", "aaz", "mog", "zug", "gul", "nuk", "kek", "kil", "ogg" };
     static const char* const OrcishWords4[] = { "rega", "nogu", "tago", "uruk", "kagg", "zaga", "grom", "ogar", "gesh", "thok", "dogg", "maka", "maza" };
     static const char* const OrcishWords5[] = { "regas", "nogah", "kazum", "magan", "no'bu", "golar", "throm", "zugas", "re'ka", "no'ku", "ro'th" };
     static const char* const OrcishWords6[] = { "thrakk", "revash", "nakazz", "moguna", "no'gor", "goth'a", "raznos", "ogerin", "gezzno", "thukad", "makogg", "aaz'no" };
