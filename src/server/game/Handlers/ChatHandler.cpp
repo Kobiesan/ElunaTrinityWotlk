@@ -189,27 +189,10 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
                 lang = ModLangAuras.front()->GetMiscValue();
             else if (HasPermission(rbac::RBAC_PERM_TWO_SIDE_INTERACTION_CHAT))
                 lang = LANG_UNIVERSAL;
-            else
-            {
-                switch (type)
-                {
-                    case CHAT_MSG_PARTY:
-                    case CHAT_MSG_PARTY_LEADER:
-                    case CHAT_MSG_RAID:
-                    case CHAT_MSG_RAID_LEADER:
-                    case CHAT_MSG_RAID_WARNING:
-                        // allow two side chat at group channel if two side group allowed
-                        if (sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_GROUP))
-                            lang = LANG_UNIVERSAL;
-                        break;
-                    case CHAT_MSG_GUILD:
-                    case CHAT_MSG_OFFICER:
-                        // allow two side chat at guild channel if two side guild allowed
-                        if (sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_GUILD))
-                            lang = LANG_UNIVERSAL;
-                        break;
-                }
-            }
+            // Note: CONFIG_ALLOW_TWO_SIDE_INTERACTION_GROUP and CONFIG_ALLOW_TWO_SIDE_INTERACTION_GUILD
+            // configs allow cross-faction players to join the same group/guild. The language
+            // comprehension system (via BroadcastGroupChatWithLanguage and Guild::BroadcastToGuild)
+            // handles message delivery, so we don't force LANG_UNIVERSAL here.
         }
     }
 
