@@ -703,17 +703,58 @@ void Channel::Say(ObjectGuid guid, std::string const& what, uint32 lang) const
         return;
     }
 
-    auto builder = [&](WorldPacket& data, LocaleConstant locale)
+    Player* sender = ObjectAccessor::FindConnectedPlayer(guid);
+
+    // Apply language comprehension system for non-universal languages
+    if (lang != LANG_UNIVERSAL && lang != LANG_ADDON && sender)
     {
-        LocaleConstant localeIdx = sWorld->GetAvailableDbcLocale(locale);
+        float speakerComprehension = sender->GetLanguageComprehension(Language(lang));
 
-        if (Player* player = ObjectAccessor::FindConnectedPlayer(guid))
-            ChatHandler::BuildChatPacket(data, CHAT_MSG_CHANNEL, Language(lang), player, player, what, 0, GetName(localeIdx));
-        else
-            ChatHandler::BuildChatPacket(data, CHAT_MSG_CHANNEL, Language(lang), guid, guid, what, 0, "", "", 0, false, GetName(localeIdx));
-    };
+        // Send to self with marked words showing what wouldn't be understood
+        std::string selfText = Player::MarkUntranslatedWords(what, speakerComprehension);
+        LocaleConstant selfLocale = sender->GetSession()->GetSessionDbLocaleIndex();
+        LocaleConstant selfLocaleIdx = sWorld->GetAvailableDbcLocale(selfLocale);
+        WorldPacket dataSelf;
+        ChatHandler::BuildChatPacket(dataSelf, CHAT_MSG_CHANNEL, Language(lang), sender, sender, selfText, 0, GetName(selfLocaleIdx));
+        sender->SendDirectMessage(&dataSelf);
 
-    SendToAll(builder, !info.IsModerator() ? guid : ObjectGuid::Empty);
+        // Send to each channel member with comprehension-based scrambling
+        for (PlayerContainer::const_iterator i = _playersStore.begin(); i != _playersStore.end(); ++i)
+        {
+            if (Player* player = ObjectAccessor::FindConnectedPlayer(i->first))
+            {
+                if (player == sender)
+                    continue;
+
+                if (!info.IsModerator() && player->GetSocial()->HasIgnore(guid))
+                    continue;
+
+                float listenerComprehension = player->GetLanguageComprehension(Language(lang));
+                float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+                std::string customText = sender->ScrambleTextByComprehension(what, effectiveComprehension, Language(lang));
+
+                LocaleConstant locale = player->GetSession()->GetSessionDbLocaleIndex();
+                LocaleConstant localeIdx = sWorld->GetAvailableDbcLocale(locale);
+                WorldPacket data;
+                ChatHandler::BuildChatPacket(data, CHAT_MSG_CHANNEL, Language(lang), sender, sender, customText, 0, GetName(localeIdx));
+                player->SendDirectMessage(&data);
+            }
+        }
+    }
+    else
+    {
+        auto builder = [&](WorldPacket& data, LocaleConstant locale)
+        {
+            LocaleConstant localeIdx = sWorld->GetAvailableDbcLocale(locale);
+
+            if (Player* player = ObjectAccessor::FindConnectedPlayer(guid))
+                ChatHandler::BuildChatPacket(data, CHAT_MSG_CHANNEL, Language(lang), player, player, what, 0, GetName(localeIdx));
+            else
+                ChatHandler::BuildChatPacket(data, CHAT_MSG_CHANNEL, Language(lang), guid, guid, what, 0, "", "", 0, false, GetName(localeIdx));
+        };
+
+        SendToAll(builder, !info.IsModerator() ? guid : ObjectGuid::Empty);
+    }
 }
 
 void Channel::Invite(Player const* player, std::string const& newname)

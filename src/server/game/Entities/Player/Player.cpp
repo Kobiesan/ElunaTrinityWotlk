@@ -21412,22 +21412,50 @@ void Player::Whisper(std::string_view text, Language language, Player* target, b
 
     bool isAddonMessage = language == LANG_ADDON;
 
-    if (!isAddonMessage)                                    // if not addon data
-        language = LANG_UNIVERSAL;                          // whispers should always be readable
-
     std::string _text(text);
     sScriptMgr->OnPlayerChat(this, CHAT_MSG_WHISPER, language, _text, target);
 
     WorldPacket data;
-    ChatHandler::BuildChatPacket(data, CHAT_MSG_WHISPER, Language(language), this, this, _text);
-    target->SendDirectMessage(&data);
 
-    // rest stuff shouldn't happen in case of addon message
-    if (isAddonMessage)
-        return;
+    // For languages other than universal/addon, apply comprehension-based scrambling
+    if (!isAddonMessage && language != LANG_UNIVERSAL)
+    {
+        // Get speaker's skill in this language - this determines how well they can express themselves
+        float speakerComprehension = GetLanguageComprehension(language);
 
-    ChatHandler::BuildChatPacket(data, CHAT_MSG_WHISPER_INFORM, Language(language), target, target, _text);
-    SendDirectMessage(&data);
+        // Get listener's comprehension - how well they understand the language
+        float listenerComprehension = target->GetLanguageComprehension(language);
+
+        // The effective comprehension is limited by both speaker's ability to express
+        // and listener's ability to understand. Use minimum of both.
+        float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+
+        // Scramble the text based on effective comprehension for the receiver
+        std::string scrambledText = ScrambleTextByComprehension(_text, effectiveComprehension, language);
+
+        ChatHandler::BuildChatPacket(data, CHAT_MSG_WHISPER, language, this, this, scrambledText);
+        target->SendDirectMessage(&data);
+
+        // Send the message to self with visual indicators on words that wouldn't be
+        // intelligible to fluent listeners due to speaker's low fluency
+        std::string selfText = MarkUntranslatedWords(_text, speakerComprehension);
+
+        ChatHandler::BuildChatPacket(data, CHAT_MSG_WHISPER_INFORM, language, target, target, selfText);
+        SendDirectMessage(&data);
+    }
+    else
+    {
+        // Addon messages or universal language - send normally
+        ChatHandler::BuildChatPacket(data, CHAT_MSG_WHISPER, language, this, this, _text);
+        target->SendDirectMessage(&data);
+
+        // rest stuff shouldn't happen in case of addon message
+        if (isAddonMessage)
+            return;
+
+        ChatHandler::BuildChatPacket(data, CHAT_MSG_WHISPER_INFORM, language, target, target, _text);
+        SendDirectMessage(&data);
+    }
 
     if (!isAcceptWhispers() && !IsGameMaster() && !target->IsGameMaster())
     {

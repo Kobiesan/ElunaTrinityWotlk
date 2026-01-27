@@ -2128,13 +2128,51 @@ void Guild::BroadcastToGuild(WorldSession* session, bool officerOnly, std::strin
 {
     if (session && session->GetPlayer() && _HasRankRight(session->GetPlayer(), officerOnly ? GR_RIGHT_OFFCHATSPEAK : GR_RIGHT_GCHATSPEAK))
     {
-        WorldPacket data;
-        ChatHandler::BuildChatPacket(data, officerOnly ? CHAT_MSG_OFFICER : CHAT_MSG_GUILD, Language(language), session->GetPlayer(), nullptr, msg);
-        for (auto const& [guid, member] : m_members)
-            if (Player* player = member.FindConnectedPlayer())
-                if (player->GetSession() && _HasRankRight(player, officerOnly ? GR_RIGHT_OFFCHATLISTEN : GR_RIGHT_GCHATLISTEN) &&
-                    !player->GetSocial()->HasIgnore(session->GetPlayer()->GetGUID()))
-                    player->SendDirectMessage(&data);
+        Player* sender = session->GetPlayer();
+        ChatMsg msgType = officerOnly ? CHAT_MSG_OFFICER : CHAT_MSG_GUILD;
+
+        // Apply language comprehension system for non-universal languages
+        if (language != LANG_UNIVERSAL && language != LANG_ADDON)
+        {
+            float speakerComprehension = sender->GetLanguageComprehension(Language(language));
+
+            // Send to self with marked words showing what wouldn't be understood
+            std::string selfText = Player::MarkUntranslatedWords(msg, speakerComprehension);
+            WorldPacket dataSelf;
+            ChatHandler::BuildChatPacket(dataSelf, msgType, Language(language), sender, nullptr, selfText);
+            sender->SendDirectMessage(&dataSelf);
+
+            // Send to each guild member with comprehension-based scrambling
+            for (auto const& [guid, member] : m_members)
+            {
+                if (Player* player = member.FindConnectedPlayer())
+                {
+                    if (player == sender)
+                        continue;
+                    if (player->GetSession() && _HasRankRight(player, officerOnly ? GR_RIGHT_OFFCHATLISTEN : GR_RIGHT_GCHATLISTEN) &&
+                        !player->GetSocial()->HasIgnore(sender->GetGUID()))
+                    {
+                        float listenerComprehension = player->GetLanguageComprehension(Language(language));
+                        float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+                        std::string customText = sender->ScrambleTextByComprehension(msg, effectiveComprehension, Language(language));
+
+                        WorldPacket data;
+                        ChatHandler::BuildChatPacket(data, msgType, Language(language), sender, nullptr, customText);
+                        player->SendDirectMessage(&data);
+                    }
+                }
+            }
+        }
+        else
+        {
+            WorldPacket data;
+            ChatHandler::BuildChatPacket(data, msgType, Language(language), sender, nullptr, msg);
+            for (auto const& [guid, member] : m_members)
+                if (Player* player = member.FindConnectedPlayer())
+                    if (player->GetSession() && _HasRankRight(player, officerOnly ? GR_RIGHT_OFFCHATLISTEN : GR_RIGHT_GCHATLISTEN) &&
+                        !player->GetSocial()->HasIgnore(sender->GetGUID()))
+                        player->SendDirectMessage(&data);
+        }
     }
 }
 
