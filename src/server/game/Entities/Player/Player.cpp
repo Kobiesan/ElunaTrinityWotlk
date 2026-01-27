@@ -21293,7 +21293,8 @@ void Player::Say(std::string_view text, Language language, WorldObject const* /*
                 continue;
 
             // Get listener's comprehension - how well they understand the language
-            float listenerComprehension = player->GetLanguageComprehension(language);
+            // GMs always see messages translated regardless of language skill
+            float listenerComprehension = player->IsGameMaster() ? 1.0f : player->GetLanguageComprehension(language);
 
             // The effective comprehension is limited by both speaker's ability to express
             // and listener's ability to understand. Use minimum of both.
@@ -21353,7 +21354,8 @@ void Player::Yell(std::string_view text, Language language, WorldObject const* /
                 continue;
 
             // Get listener's comprehension - how well they understand the language
-            float listenerComprehension = player->GetLanguageComprehension(language);
+            // GMs always see messages translated regardless of language skill
+            float listenerComprehension = player->IsGameMaster() ? 1.0f : player->GetLanguageComprehension(language);
 
             // The effective comprehension is limited by both speaker's ability to express
             // and listener's ability to understand. Use minimum of both.
@@ -21424,7 +21426,8 @@ void Player::Whisper(std::string_view text, Language language, Player* target, b
         float speakerComprehension = GetLanguageComprehension(language);
 
         // Get listener's comprehension - how well they understand the language
-        float listenerComprehension = target->GetLanguageComprehension(language);
+        // GMs always see messages translated regardless of language skill
+        float listenerComprehension = target->IsGameMaster() ? 1.0f : target->GetLanguageComprehension(language);
 
         // The effective comprehension is limited by both speaker's ability to express
         // and listener's ability to understand. Use minimum of both.

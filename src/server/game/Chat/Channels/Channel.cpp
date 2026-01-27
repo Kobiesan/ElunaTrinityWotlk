@@ -732,7 +732,8 @@ void Channel::Say(ObjectGuid guid, std::string const& what, uint32 lang) const
                 if (!info.IsModerator() && player->GetSocial()->HasIgnore(guid))
                     continue;
 
-                float listenerComprehension = player->GetLanguageComprehension(Language(lang));
+                // GMs always see messages translated regardless of language skill
+                float listenerComprehension = player->IsGameMaster() ? 1.0f : player->GetLanguageComprehension(Language(lang));
                 float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
                 std::string customText = sender->ScrambleTextByComprehension(what, effectiveComprehension, Language(lang));
 
