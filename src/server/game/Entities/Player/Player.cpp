@@ -6142,6 +6142,35 @@ namespace LanguageWords
     static const char* const DraeneiWords11[] = { "zekulrakkas", "archimtiros", "mannorgulan", "mishunadare", "ashjrakamas" };
     static const char* const DraeneiWords12[] = { "zennshinagas" };
 
+    // Scourge language words (Language 15)
+    static const char* const ScourgeWords1[] = { "a", "e", "i", "o", "u", "r", "n", "k" };
+    static const char* const ScourgeWords2[] = { "ul", "kr", "az", "th", "ur", "na", "ek", "ro", "iz", "ve", "dr" };
+    static const char* const ScourgeWords3[] = { "ner", "zul", "kel", "thr", "oth", "rak", "vos", "nur", "dak", "orm", "gyr", "bel", "vik" };
+    static const char* const ScourgeWords4[] = { "thul", "keth", "nazu", "vrok", "deth", "skul", "grim", "fros", "arak", "zorn", "mort", "noth", "keld" };
+    static const char* const ScourgeWords5[] = { "thros", "nazul", "liche", "groth", "skorn", "vrykl", "nerzh", "kelth", "draka", "mortu", "frosk", "rekna", "zornn" };
+    static const char* const ScourgeWords6[] = { "lich'al", "nazgar", "thuzad", "vorkul", "nekros", "skoral", "drakul", "frosna", "kelthu", "grimvr", "zornth", "undeth" };
+    static const char* const ScourgeWords7[] = { "ner'zhul", "kel'thuz", "naz'grim", "vor'moth", "lich'nak", "skor'vyn", "drak'oth", "fros'kel", "mort'nar", "thul'gor", "grim'zul" };
+    static const char* const ScourgeWords8[] = { "nazgroth", "kelthras", "ner'arak", "vros'keld", "thuz'adin", "skor'nath", "mort'azul", "drak'neru", "grim'vrok", "fros'thul", "zorn'lich" };
+    static const char* const ScourgeWords9[] = { "lich'karul", "naz'gothul", "kel'thunar", "thuz'grima", "vros'nekra", "skor'thazn", "drak'mortu", "fros'nazul", "grim'thros", "ner'kelthu" };
+    static const char* const ScourgeWords10[] = { "kel'thuzadin", "naz'grimvork", "lich'thulgor", "thuz'nerakul", "vros'skornath", "drak'frosgrim", "mort'nazgothu", "skor'kelthras", "grim'vrosthul" };
+    static const char* const ScourgeWords11[] = { "ner'zhulgroth", "kel'nazthuzad", "thuz'grimvorkul", "lich'skordraka", "vros'mortkelnar", "fros'nerarakoth" };
+    static const char* const ScourgeWords12[] = { "kel'thuzadgrim", "naz'lichthulgor", "thuz'vroskelnar", "skor'grimnerakul" };
+
+    // Nerubian language words (Language 16)
+    static const char* const NerubianWords1[] = { "a", "i", "k", "x", "z", "q", "n", "t" };
+    static const char* const NerubianWords2[] = { "ix", "ka", "zz", "tk", "an", "uk", "xi", "qu", "ss", "ik", "az" };
+    static const char* const NerubianWords3[] = { "kix", "zzk", "anu", "tik", "qua", "xal", "ner", "azj", "ikt", "uss", "nak", "zar", "kth" };
+    static const char* const NerubianWords4[] = { "azjl", "nerb", "ixxa", "tikk", "qual", "krix", "zzul", "anub", "ssik", "arak", "ukkz", "xith", "qirj" };
+    static const char* const NerubianWords5[] = { "azjol", "nerub", "anubt", "kixxz", "qualt", "zz'uk", "ix'kal", "ss'nar", "tik'xa", "arak'n", "krix'a", "xal'uk", "qirj'i" };
+    static const char* const NerubianWords6[] = { "anubkz", "nerubx", "ix'kalt", "zz'arak", "ss'nerb", "tik'xal", "qua'rix", "anubar", "krix'zz", "azj'ner", "xith'uk", "ikt'ssa" };
+    static const char* const NerubianWords7[] = { "azj'nerb", "anub'ixk", "ix'qualn", "zz'tikxa", "nerub'kz", "ss'arak'n", "krix'zul", "qua'xith", "tik'anub", "arak'ner", "xal'zzuk" };
+    static const char* const NerubianWords8[] = { "anub'arak", "azjol'ner", "ix'krixzz", "nerub'tik", "zz'qualxa", "ss'anubkz", "krix'xith", "qua'nerix", "tik'zzara", "arak'ixka", "xal'ssner" };
+    static const char* const NerubianWords9[] = { "azjol'nerb", "anub'ixkal", "nerub'arak", "ix'zz'qual", "krix'tikan", "ss'xithner", "qua'anubkz", "zz'nerixka", "tik'arakss", "arak'qualx" };
+    static const char* const NerubianWords10[] = { "anub'arakzz", "azjol'nerix", "nerub'qualka", "ix'krixtikan", "zz'ssanubner", "krix'arakxal", "qua'tikixkal", "ss'nerubarak", "tik'zzqualxa", "xith'anubkrix" };
+    static const char* const NerubianWords11[] = { "azjol'nerubix", "anub'arakqual", "nerub'krixtik", "ix'ssxitharak", "zz'qualanubkz", "krix'nerixkal", "qua'tikarakss", "ss'azjolnerix" };
+    static const char* const NerubianWords12[] = { "anub'arakazjol", "nerub'ixqualka", "azjol'krixtikan", "ix'ssnerubarakz" };
+    static const char* const NerubianWords13[] = { "azjol'nerubtikxa", "anub'arak'qualix", "nerub'krixssxith" };
+
     // Helper function that selects a word from an array using hash-based indexing
     // This ensures the same input word always produces the same translated word
     template<size_t N>
@@ -6166,6 +6195,22 @@ namespace LanguageWords
     }
 
     // Word list tables for each language - sorted by minLength in descending order for efficient lookup
+    static const WordListEntry NerubianWordTable[] = {
+        MakeEntry(13, NerubianWords13), MakeEntry(12, NerubianWords12), MakeEntry(11, NerubianWords11),
+        MakeEntry(10, NerubianWords10), MakeEntry(9, NerubianWords9), MakeEntry(8, NerubianWords8),
+        MakeEntry(7, NerubianWords7), MakeEntry(6, NerubianWords6), MakeEntry(5, NerubianWords5),
+        MakeEntry(4, NerubianWords4), MakeEntry(3, NerubianWords3), MakeEntry(2, NerubianWords2),
+        MakeEntry(1, NerubianWords1)
+    };
+
+    static const WordListEntry ScourgeWordTable[] = {
+        MakeEntry(12, ScourgeWords12), MakeEntry(11, ScourgeWords11),
+        MakeEntry(10, ScourgeWords10), MakeEntry(9, ScourgeWords9), MakeEntry(8, ScourgeWords8),
+        MakeEntry(7, ScourgeWords7), MakeEntry(6, ScourgeWords6), MakeEntry(5, ScourgeWords5),
+        MakeEntry(4, ScourgeWords4), MakeEntry(3, ScourgeWords3), MakeEntry(2, ScourgeWords2),
+        MakeEntry(1, ScourgeWords1)
+    };
+
     static const WordListEntry OrcishWordTable[] = {
         MakeEntry(13, OrcishWords13), MakeEntry(12, OrcishWords12), MakeEntry(11, OrcishWords11),
         MakeEntry(10, OrcishWords10), MakeEntry(9, OrcishWords9), MakeEntry(8, OrcishWords8),
