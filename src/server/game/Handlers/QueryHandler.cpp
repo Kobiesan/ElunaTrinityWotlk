@@ -226,6 +226,7 @@ void WorldSession::HandleNpcTextQueryOpcode(WorldPacket& recvData)
     {
         std::string text0[MAX_GOSSIP_TEXT_OPTIONS], text1[MAX_GOSSIP_TEXT_OPTIONS];
         LocaleConstant locale = GetSessionDbLocaleIndex();
+        Player* player = GetPlayer();
 
         for (uint8 i = 0; i < MAX_GOSSIP_TEXT_OPTIONS; ++i)
         {
@@ -253,7 +254,6 @@ void WorldSession::HandleNpcTextQueryOpcode(WorldPacket& recvData)
             }
 
             // Scramble text based on player's language comprehension (GMs always get full comprehension)
-            Player* player = GetPlayer();
             if (player && languageId != LANG_UNIVERSAL && !player->IsGameMaster())
             {
                 Language lang = static_cast<Language>(languageId);
@@ -308,7 +308,10 @@ void WorldSession::HandleQueryPageText(WorldPacket& recvData)
         if (sourceGuid.IsItem())
         {
             if (Item* item = player->GetItemByGuid(sourceGuid))
-                languageId = item->GetTemplate()->LanguageID;
+            {
+                if (ItemTemplate const* itemTemplate = item->GetTemplate())
+                    languageId = itemTemplate->LanguageID;
+            }
         }
         else if (sourceGuid.IsGameObject())
         {
