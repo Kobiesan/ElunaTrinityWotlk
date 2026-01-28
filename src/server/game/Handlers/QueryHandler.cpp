@@ -21,9 +21,7 @@
 #include "Corpse.h"
 #include "DatabaseEnv.h"
 #include "DBCStores.h"
-#include "GameObject.h"
 #include "GameTime.h"
-#include "Item.h"
 #include "Log.h"
 #include "MapManager.h"
 #include "NPCHandler.h"
@@ -226,13 +224,10 @@ void WorldSession::HandleNpcTextQueryOpcode(WorldPacket& recvData)
     {
         std::string text0[MAX_GOSSIP_TEXT_OPTIONS], text1[MAX_GOSSIP_TEXT_OPTIONS];
         LocaleConstant locale = GetSessionDbLocaleIndex();
-        Player* player = GetPlayer();
 
         for (uint8 i = 0; i < MAX_GOSSIP_TEXT_OPTIONS; ++i)
         {
             BroadcastText const* bct = sObjectMgr->GetBroadcastText(gossip->Options[i].BroadcastTextID);
-            // Use BroadcastText's LanguageID if available, otherwise fall back to gossip option's Language
-            uint32 languageId = bct ? bct->LanguageID : gossip->Options[i].Language;
             if (bct)
             {
                 text0[i] = bct->GetText(locale, GENDER_MALE, true);
@@ -250,18 +245,6 @@ void WorldSession::HandleNpcTextQueryOpcode(WorldPacket& recvData)
                 {
                     ObjectMgr::GetLocaleString(npcTextLocale->Text_0[i], locale, text0[i]);
                     ObjectMgr::GetLocaleString(npcTextLocale->Text_1[i], locale, text1[i]);
-                }
-            }
-
-            // Scramble text based on player's language comprehension (GMs always get full comprehension)
-            if (player && languageId != LANG_UNIVERSAL && !player->IsGameMaster())
-            {
-                Language lang = static_cast<Language>(languageId);
-                float comprehension = player->GetLanguageComprehension(lang);
-                if (comprehension < 1.0f)
-                {
-                    text0[i] = player->ScrambleTextByComprehension(text0[i], comprehension, lang);
-                    text1[i] = player->ScrambleTextByComprehension(text1[i], comprehension, lang);
                 }
             }
 
@@ -297,32 +280,7 @@ void WorldSession::HandleQueryPageText(WorldPacket& recvData)
 
     uint32 pageID;
     recvData >> pageID;
-    ObjectGuid sourceGuid;
-    recvData >> sourceGuid;
-
-    // Determine the language from the source (item or game object)
-    uint32 languageId = LANG_UNIVERSAL;
-    Player* player = GetPlayer();
-    if (player)
-    {
-        if (sourceGuid.IsItem())
-        {
-            if (Item* item = player->GetItemByGuid(sourceGuid))
-            {
-                if (ItemTemplate const* itemTemplate = item->GetTemplate())
-                    languageId = itemTemplate->LanguageID;
-            }
-        }
-        else if (sourceGuid.IsGameObject())
-        {
-            if (GameObject* go = ObjectAccessor::GetGameObject(*player, sourceGuid))
-            {
-                GameObjectTemplate const* goTemplate = go->GetGOInfo();
-                if (goTemplate && goTemplate->type == GAMEOBJECT_TYPE_GOOBER)
-                    languageId = goTemplate->goober.language;
-            }
-        }
-    }
+    recvData.read_skip<uint64>();                          // guid
 
     while (pageID)
     {
@@ -345,15 +303,6 @@ void WorldSession::HandleQueryPageText(WorldPacket& recvData)
             if (localeConstant != LOCALE_enUS)
                 if (PageTextLocale const* pageTextLocale = sObjectMgr->GetPageTextLocale(pageID))
                     ObjectMgr::GetLocaleString(pageTextLocale->Text, localeConstant, Text);
-
-            // Scramble text based on player's language comprehension (GMs always get full comprehension)
-            if (player && languageId != LANG_UNIVERSAL && !player->IsGameMaster())
-            {
-                Language lang = static_cast<Language>(languageId);
-                float comprehension = player->GetLanguageComprehension(lang);
-                if (comprehension < 1.0f)
-                    Text = player->ScrambleTextByComprehension(Text, comprehension, lang);
-            }
 
             data << Text;
             data << uint32(pageText->NextPageID);
