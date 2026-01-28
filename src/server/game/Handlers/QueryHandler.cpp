@@ -305,6 +305,8 @@ void WorldSession::HandleQueryPageText(WorldPacket& recvData)
     ObjectGuid sourceGuid;
     recvData >> sourceGuid;
 
+    TC_LOG_DEBUG("network", "PageText Query: PageID={}, SourceGuid={}", pageID, sourceGuid.ToString());
+
     // Determine the language from the source (item or game object)
     uint32 languageId = LANG_UNIVERSAL;
     Player* player = GetPlayer();
@@ -315,7 +317,14 @@ void WorldSession::HandleQueryPageText(WorldPacket& recvData)
             if (Item* item = player->GetItemByGuid(sourceGuid))
             {
                 if (ItemTemplate const* itemTemplate = item->GetTemplate())
+                {
                     languageId = itemTemplate->LanguageID;
+                    TC_LOG_DEBUG("network", "PageText Query: Item {} found, LanguageID={}", item->GetEntry(), languageId);
+                }
+            }
+            else
+            {
+                TC_LOG_DEBUG("network", "PageText Query: Item not found for GUID {}", sourceGuid.ToString());
             }
         }
         else if (sourceGuid.IsGameObject())
@@ -324,8 +333,19 @@ void WorldSession::HandleQueryPageText(WorldPacket& recvData)
             {
                 GameObjectTemplate const* goTemplate = go->GetGOInfo();
                 if (goTemplate && goTemplate->type == GAMEOBJECT_TYPE_GOOBER)
+                {
                     languageId = goTemplate->goober.language;
+                    TC_LOG_DEBUG("network", "PageText Query: GameObject {} found, LanguageID={}", go->GetEntry(), languageId);
+                }
             }
+            else
+            {
+                TC_LOG_DEBUG("network", "PageText Query: GameObject not found for GUID {}", sourceGuid.ToString());
+            }
+        }
+        else
+        {
+            TC_LOG_DEBUG("network", "PageText Query: Source is neither Item nor GameObject, type={}", uint32(sourceGuid.GetHigh()));
         }
     }
 
@@ -352,7 +372,9 @@ void WorldSession::HandleQueryPageText(WorldPacket& recvData)
                     ObjectMgr::GetLocaleString(pageTextLocale->Text, localeConstant, Text);
 
             // Scramble text based on player's language comprehension (GMs always get full comprehension)
-            bool textScrambled = false;
+            // Note: Unlike NPC text, page text response doesn't include a language field, so we can't
+            // signal to the client that the text was pre-scrambled. The client may still try to scramble
+            // based on the item's LanguageID from the item template query.
             if (player && languageId != LANG_UNIVERSAL && !player->IsGameMaster())
             {
                 Language lang = static_cast<Language>(languageId);
@@ -361,9 +383,16 @@ void WorldSession::HandleQueryPageText(WorldPacket& recvData)
                 if (comprehension < 1.0f)
                 {
                     Text = player->ScrambleTextByComprehension(Text, comprehension, lang);
-                    textScrambled = true;
                     TC_LOG_DEBUG("network", "PageText (ID: {}) scrambled due to insufficient comprehension", pageID);
                 }
+            }
+            else if (languageId == LANG_UNIVERSAL)
+            {
+                TC_LOG_DEBUG("network", "PageText (ID: {}) not scrambled - Language is UNIVERSAL", pageID);
+            }
+            else if (player && player->IsGameMaster())
+            {
+                TC_LOG_DEBUG("network", "PageText (ID: {}) not scrambled - Player is GM", pageID);
             }
 
             data << Text;
