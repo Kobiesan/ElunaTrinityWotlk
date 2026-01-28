@@ -233,6 +233,8 @@ void WorldSession::HandleNpcTextQueryOpcode(WorldPacket& recvData)
             BroadcastText const* bct = sObjectMgr->GetBroadcastText(gossip->Options[i].BroadcastTextID);
             // Use BroadcastText's LanguageID if available, otherwise fall back to gossip option's Language
             uint32 languageId = bct ? bct->LanguageID : gossip->Options[i].Language;
+            // Track if text was scrambled server-side so we know what language to send to client
+            bool textScrambled = false;
             if (bct)
             {
                 text0[i] = bct->GetText(locale, GENDER_MALE, true);
@@ -262,6 +264,7 @@ void WorldSession::HandleNpcTextQueryOpcode(WorldPacket& recvData)
                 {
                     text0[i] = player->ScrambleTextByComprehension(text0[i], comprehension, lang);
                     text1[i] = player->ScrambleTextByComprehension(text1[i], comprehension, lang);
+                    textScrambled = true;
                 }
             }
 
@@ -277,7 +280,9 @@ void WorldSession::HandleNpcTextQueryOpcode(WorldPacket& recvData)
             else
                 data << text1[i];
 
-            data << gossip->Options[i].Language;
+            // Send LANG_UNIVERSAL if text was scrambled server-side to prevent client from scrambling again,
+            // otherwise send the actual language ID so client knows what language the text is in
+            data << uint32(textScrambled ? LANG_UNIVERSAL : languageId);
 
             for (uint8 j = 0; j < MAX_GOSSIP_TEXT_EMOTES; ++j)
             {
