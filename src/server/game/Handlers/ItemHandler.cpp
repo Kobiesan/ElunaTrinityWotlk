@@ -348,18 +348,6 @@ void WorldSession::HandleReadItem(WorldPacket& recvData)
         {
             data.Initialize(SMSG_READ_ITEM_OK, 8);
             TC_LOG_INFO("network", "STORAGE: Item page sent");
-
-            // Debug logging for language translation status
-            // The actual text scrambling happens in HandleQueryPageText when the client queries for page content
-            ItemTemplate const* itemTemplate = pItem->GetTemplate();
-            if (itemTemplate && itemTemplate->LanguageID != LANG_UNIVERSAL)
-            {
-                Language lang = static_cast<Language>(itemTemplate->LanguageID);
-                float comprehension = _player->GetLanguageComprehension(lang);
-                bool playerKnowsLanguage = (comprehension >= 1.0f) || _player->IsGameMaster();
-                TC_LOG_DEBUG("network", "HandleReadItem: Item {} Language: {}, Comprehension: {:.2f}, PlayerKnowsLanguage: {}",
-                    pItem->GetEntry(), itemTemplate->LanguageID, comprehension, playerKnowsLanguage);
-            }
         }
         else
         {
