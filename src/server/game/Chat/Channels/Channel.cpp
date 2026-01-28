@@ -732,9 +732,17 @@ void Channel::Say(ObjectGuid guid, std::string const& what, uint32 lang) const
                 if (!info.IsModerator() && player->GetSocial()->HasIgnore(guid))
                     continue;
 
-                // GMs always see messages translated regardless of language skill
-                float listenerComprehension = player->IsGameMaster() ? 1.0f : player->GetLanguageComprehension(Language(lang));
-                float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+                // GMs always get full comprehension regardless of speaker's skill
+                // For non-GMs, effective comprehension is limited by both speaker's ability to express
+                // and listener's ability to understand (minimum of both)
+                float effectiveComprehension;
+                if (player->IsGameMaster())
+                    effectiveComprehension = 1.0f;
+                else
+                {
+                    float listenerComprehension = player->GetLanguageComprehension(Language(lang));
+                    effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+                }
                 std::string customText = sender->ScrambleTextByComprehension(what, effectiveComprehension, Language(lang));
 
                 LocaleConstant locale = player->GetSession()->GetSessionDbLocaleIndex();
