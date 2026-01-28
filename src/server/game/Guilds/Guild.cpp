@@ -2152,7 +2152,8 @@ void Guild::BroadcastToGuild(WorldSession* session, bool officerOnly, std::strin
                     if (player->GetSession() && _HasRankRight(player, officerOnly ? GR_RIGHT_OFFCHATLISTEN : GR_RIGHT_GCHATLISTEN) &&
                         !player->GetSocial()->HasIgnore(sender->GetGUID()))
                     {
-                        float listenerComprehension = player->GetLanguageComprehension(Language(language));
+                        // GMs always see messages translated regardless of language skill
+                        float listenerComprehension = player->IsGameMaster() ? 1.0f : player->GetLanguageComprehension(Language(language));
                         float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
                         std::string customText = sender->ScrambleTextByComprehension(msg, effectiveComprehension, Language(language));
 
