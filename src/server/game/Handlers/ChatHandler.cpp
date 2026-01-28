@@ -78,9 +78,17 @@ static void BroadcastGroupChatWithLanguage(Player* sender, Group* group, ChatMsg
             if (groupIndex != -1 && itr->getSubGroup() != groupIndex)
                 continue;
 
-            // GMs always see messages translated regardless of language skill
-            float listenerComprehension = member->IsGameMaster() ? 1.0f : member->GetLanguageComprehension(lang);
-            float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+            // GMs always get full comprehension regardless of speaker's skill
+            // For non-GMs, effective comprehension is limited by both speaker's ability to express
+            // and listener's ability to understand (minimum of both)
+            float effectiveComprehension;
+            if (member->IsGameMaster())
+                effectiveComprehension = 1.0f;
+            else
+            {
+                float listenerComprehension = member->GetLanguageComprehension(lang);
+                effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+            }
             std::string customText = sender->ScrambleTextByComprehension(msg, effectiveComprehension, lang);
 
             WorldPacket data;

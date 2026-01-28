@@ -21292,13 +21292,17 @@ void Player::Say(std::string_view text, Language language, WorldObject const* /*
             if (!player->HaveAtClient(this))
                 continue;
 
-            // Get listener's comprehension - how well they understand the language
-            // GMs always see messages translated regardless of language skill
-            float listenerComprehension = player->IsGameMaster() ? 1.0f : player->GetLanguageComprehension(language);
-
-            // The effective comprehension is limited by both speaker's ability to express
-            // and listener's ability to understand. Use minimum of both.
-            float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+            // GMs always get full comprehension regardless of speaker's skill
+            // For non-GMs, effective comprehension is limited by both speaker's ability to express
+            // and listener's ability to understand (minimum of both)
+            float effectiveComprehension;
+            if (player->IsGameMaster())
+                effectiveComprehension = 1.0f;
+            else
+            {
+                float listenerComprehension = player->GetLanguageComprehension(language);
+                effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+            }
 
             // Scramble the original text based on effective comprehension
             std::string customText = ScrambleTextByComprehension(_text, effectiveComprehension, language);
@@ -21353,13 +21357,17 @@ void Player::Yell(std::string_view text, Language language, WorldObject const* /
             if (!player->HaveAtClient(this))
                 continue;
 
-            // Get listener's comprehension - how well they understand the language
-            // GMs always see messages translated regardless of language skill
-            float listenerComprehension = player->IsGameMaster() ? 1.0f : player->GetLanguageComprehension(language);
-
-            // The effective comprehension is limited by both speaker's ability to express
-            // and listener's ability to understand. Use minimum of both.
-            float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+            // GMs always get full comprehension regardless of speaker's skill
+            // For non-GMs, effective comprehension is limited by both speaker's ability to express
+            // and listener's ability to understand (minimum of both)
+            float effectiveComprehension;
+            if (player->IsGameMaster())
+                effectiveComprehension = 1.0f;
+            else
+            {
+                float listenerComprehension = player->GetLanguageComprehension(language);
+                effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+            }
 
             // Scramble the original text based on effective comprehension
             std::string customText = player->ScrambleTextByComprehension(_text, effectiveComprehension, language);
@@ -21425,13 +21433,17 @@ void Player::Whisper(std::string_view text, Language language, Player* target, b
         // Get speaker's skill in this language - this determines how well they can express themselves
         float speakerComprehension = GetLanguageComprehension(language);
 
-        // Get listener's comprehension - how well they understand the language
-        // GMs always see messages translated regardless of language skill
-        float listenerComprehension = target->IsGameMaster() ? 1.0f : target->GetLanguageComprehension(language);
-
-        // The effective comprehension is limited by both speaker's ability to express
-        // and listener's ability to understand. Use minimum of both.
-        float effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+        // GMs always get full comprehension regardless of speaker's skill
+        // For non-GMs, effective comprehension is limited by both speaker's ability to express
+        // and listener's ability to understand (minimum of both)
+        float effectiveComprehension;
+        if (target->IsGameMaster())
+            effectiveComprehension = 1.0f;
+        else
+        {
+            float listenerComprehension = target->GetLanguageComprehension(language);
+            effectiveComprehension = std::min(speakerComprehension, listenerComprehension);
+        }
 
         // Scramble the text based on effective comprehension for the receiver
         std::string scrambledText = ScrambleTextByComprehension(_text, effectiveComprehension, language);
