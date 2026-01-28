@@ -112,7 +112,7 @@ enum ItemBondingType
 enum ItemFieldFlags : uint32
 {
     ITEM_FIELD_FLAG_SOULBOUND     = 0x00000001, // Item is soulbound and cannot be traded <<--
-    ITEM_FIELD_FLAG_UNK1          = 0x00000002, // ?
+    ITEM_FIELD_FLAG_TRANSLATED    = 0x00000002, // Text has been translated to language ID in query (prevents client-side scrambling)
     ITEM_FIELD_FLAG_UNLOCKED      = 0x00000004, // Item had lock but can be opened now
     ITEM_FIELD_FLAG_WRAPPED       = 0x00000008, // Item is wrapped and contains another item
     ITEM_FIELD_FLAG_UNK2          = 0x00000010, // ?
