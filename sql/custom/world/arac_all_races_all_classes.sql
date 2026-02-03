@@ -419,6 +419,15 @@ INSERT IGNORE INTO `playercreateinfo_item` (`race`, `class`, `itemid`, `amount`)
 (3, 7, 2362, 1),
 (3, 7, 6948, 1);
 
+-- Dwarf Mage (3, 8)
+INSERT IGNORE INTO `playercreateinfo_item` (`race`, `class`, `itemid`, `amount`) VALUES
+(3, 8, 55, 1),
+(3, 8, 6096, 1),
+(3, 8, 1395, 1),
+(3, 8, 6140, 1),
+(3, 8, 35, 1),
+(3, 8, 6948, 1);
+
 -- Dwarf Warlock (3, 9)
 INSERT IGNORE INTO `playercreateinfo_item` (`race`, `class`, `itemid`, `amount`) VALUES
 (3, 9, 57, 1),
