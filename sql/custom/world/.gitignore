@@ -1,1 +1,6 @@
-*.sql
+# Custom SQL files can now be added here
+# Remove or comment out '*.sql' to include custom SQL files
+
+# Exclude temporary or backup files
+*.bak
+*~
