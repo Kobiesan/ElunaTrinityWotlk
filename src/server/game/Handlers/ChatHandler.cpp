@@ -155,9 +155,56 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
         }
         if (!foundAura)
         {
-            SendNotification(LANG_NOT_LEARNED_LANGUAGE);
-            recvData.rfinish();
-            return;
+            // Instead of rejecting, fall back to a language the player actually knows.
+            // This handles macros and login defaulting to Common/Orcish when the player
+            // doesn't speak those languages (e.g. races that only start with their native tongue).
+
+            // Full language table for fallback search
+            static constexpr struct { Language lang; uint16 skill; } languageTable[] = {
+                { LANG_COMMON,     98  }, // SKILL_LANG_COMMON
+                { LANG_ORCISH,     109 }, // SKILL_LANG_ORCISH
+                { LANG_DWARVISH,   111 }, // SKILL_LANG_DWARVISH
+                { LANG_DARNASSIAN, 113 }, // SKILL_LANG_DARNASSIAN
+                { LANG_TAURAHE,    115 }, // SKILL_LANG_TAURAHE
+                { LANG_GNOMISH,    313 }, // SKILL_LANG_GNOMISH
+                { LANG_TROLL,      315 }, // SKILL_LANG_TROLL
+                { LANG_GUTTERSPEAK,673 }, // SKILL_LANG_FORSAKEN
+                { LANG_THALASSIAN, 137 }, // SKILL_LANG_THALASSIAN
+                { LANG_DRAENEI,    759 }, // SKILL_LANG_DRAENEI
+            };
+
+            // First, try the player's racial default language (BaseLanguage from ChrRaces.dbc)
+            Language fallback = LANG_UNIVERSAL;
+            if (ChrRacesEntry const* raceEntry = sChrRacesStore.LookupEntry(sender->GetRace()))
+            {
+                Language racialLang = Language(raceEntry->BaseLanguage);
+                LanguageDesc const* racialDesc = GetLanguageDescByID(racialLang);
+                if (racialDesc && (racialDesc->skill_id == 0 || sender->HasSkill(racialDesc->skill_id)))
+                    fallback = racialLang;
+            }
+
+            // If the player doesn't know their racial default, search all languages
+            if (fallback == LANG_UNIVERSAL)
+            {
+                for (auto const& entry : languageTable)
+                {
+                    if (sender->HasSkill(entry.skill))
+                    {
+                        fallback = entry.lang;
+                        break;
+                    }
+                }
+            }
+
+            if (fallback == LANG_UNIVERSAL)
+            {
+                // Player knows no language at all, reject
+                SendNotification(LANG_NOT_LEARNED_LANGUAGE);
+                recvData.rfinish();
+                return;
+            }
+
+            lang = fallback;
         }
     }
 

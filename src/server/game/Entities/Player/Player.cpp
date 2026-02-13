@@ -23716,26 +23716,14 @@ void Player::LearnDefaultSkill(uint32 skillId, uint16 rank)
             // Check for race-specific overrides
             switch (GetRace())
             {
-                case RACE_GNOME:
-                    if (skillId == SKILL_LANG_DWARVEN) // Gnomes know some Dwarvish
-                        skillValue = 50;
-                    break;
-
                 case RACE_DWARF:
                     if (skillId == SKILL_LANG_GNOMISH) // Dwarves know some Gnomish
                         skillValue = 50;
                     break;
 
                 case RACE_NIGHTELF:
-                    if (skillId == SKILL_LANG_COMMON)
-                        skillValue = 275;
                     if (skillId == SKILL_LANG_THALASSIAN)
                         skillValue = 50;
-                    break;
-
-                case RACE_DRAENEI:
-                    if (skillId == SKILL_LANG_COMMON)
-                        skillValue = 200;
                     break;
 
                 case RACE_ORC:
@@ -23743,18 +23731,14 @@ void Player::LearnDefaultSkill(uint32 skillId, uint16 rank)
                         skillValue = 50;
                     break;
 
-                case RACE_UNDEAD_PLAYER:
-                    if (skillId == SKILL_LANG_ORCISH)
-                        skillValue = 250;
-                    break;
-
                 case RACE_BLOODELF:
-                    if (skillId == SKILL_LANG_ORCISH)
-                        skillValue = 200;
                     if (skillId == SKILL_LANG_DARNASSIAN)
                         skillValue = 50;
                     break;
 
+                case RACE_DRAENEI:
+                case RACE_UNDEAD_PLAYER:
+                case RACE_GNOME:
                 case RACE_HUMAN:
                 case RACE_TROLL:
                 case RACE_TAUREN:
