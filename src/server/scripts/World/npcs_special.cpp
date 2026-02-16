@@ -37,6 +37,7 @@
 #include "SpellMgr.h"
 #include "Vehicle.h"
 #include "World.h"
+#include "../Custom/npc_restricted_skill.h"
 
 /*########
 # npc_air_force_bots
@@ -1591,6 +1592,9 @@ public:
 
         bool OnGossipHello(Player* player) override
         {
+            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_GOSSIP))
+                return true;
+
             InitGossipMenuFor(player, MENU_ID_XP_ON_OFF);
             if (player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_NO_XP_GAIN)) // not gaining XP
             {
@@ -1806,6 +1810,14 @@ class npc_stable_master : public CreatureScript
         struct npc_stable_masterAI : public SmartAI
         {
             npc_stable_masterAI(Creature* creature) : SmartAI(creature) { }
+
+            bool OnGossipHello(Player* player) override
+            {
+                if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_STABLEMASTER))
+                    return true;
+
+                return SmartAI::OnGossipHello(player);
+            }
 
             bool OnGossipSelect(Player* player, uint32 menuId, uint32 gossipListId) override
             {

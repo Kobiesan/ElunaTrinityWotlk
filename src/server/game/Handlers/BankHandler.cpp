@@ -24,6 +24,7 @@
 #include "Player.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
+#include "../../scripts/Custom/npc_restricted_skill.h"
 
 bool WorldSession::CanUseBank(ObjectGuid bankerGUID) const
 {
@@ -51,6 +52,10 @@ void WorldSession::HandleBankerActivateOpcode(WorldPackets::NPC::Hello& packet)
         TC_LOG_DEBUG("network", "WORLD: HandleBankerActivateOpcode - {} not found or you can not interact with him.", packet.Unit.ToString());
         return;
     }
+
+    // Check NPC skill requirement before opening bank window
+    if (!CheckNpcSkillRequirement(_player, unit, UNIT_NPC_FLAG_BANKER))
+        return;
 
     // remove fake death
     if (GetPlayer()->HasUnitState(UNIT_STATE_DIED))

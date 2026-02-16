@@ -37,6 +37,7 @@
 #endif
 #include "World.h"
 #include "WorldPacket.h"
+#include "../Scripts/Custom/npc_restricted_skill.h"
 
 void WorldSession::HandleQuestgiverStatusQueryOpcode(WorldPacket& recvData)
 {
@@ -90,6 +91,10 @@ void WorldSession::HandleQuestgiverHelloOpcode(WorldPacket& recvData)
         return;
     }
 
+    // Check NPC skill requirement before showing quest menu
+    if (!CheckNpcSkillRequirement(_player, creature, UNIT_NPC_FLAG_QUESTGIVER))
+        return;
+
     // remove fake death
     if (GetPlayer()->HasUnitState(UNIT_STATE_DIED))
         GetPlayer()->RemoveAurasByType(SPELL_AURA_FEIGN_DEATH);
@@ -140,6 +145,17 @@ void WorldSession::HandleQuestgiverAcceptQuestOpcode(WorldPacket& recvData)
     {
         CLOSE_GOSSIP_CLEAR_SHARING_INFO();
         return;
+    }
+
+    // Check NPC skill requirement before accepting quest
+    if (object->GetTypeId() == TYPEID_UNIT)
+    {
+        Creature* creature = object->ToCreature();
+        if (!CheckNpcSkillRequirement(_player, creature, UNIT_NPC_FLAG_QUESTGIVER))
+        {
+            CLOSE_GOSSIP_CLEAR_SHARING_INFO();
+            return;
+        }
     }
 
     if (Player* playerQuestObject = object->ToPlayer())
@@ -244,6 +260,14 @@ void WorldSession::HandleQuestgiverQueryQuestOpcode(WorldPacket& recvData)
     {
         _player->PlayerTalkClass->SendCloseGossip();
         return;
+    }
+
+    // Check NPC skill requirement for quest givers
+    if (object->GetTypeId() == TYPEID_UNIT)
+    {
+        Creature* creature = object->ToCreature();
+        if (!CheckNpcSkillRequirement(_player, creature, UNIT_NPC_FLAG_QUESTGIVER))
+            return;
     }
 
     if (Quest const* quest = sObjectMgr->GetQuestTemplate(questId))

@@ -32,6 +32,7 @@ EndScriptData */
 #include "SpellInfo.h"
 #include "SpellMgr.h"
 #include "WorldSession.h"
+#include "../Custom/npc_restricted_skill.h"
 
 /*
 A few notes for future developement:
@@ -809,6 +810,9 @@ public:
 
         bool OnGossipHello(Player* player) override
         {
+            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_TRAINER))
+                return true;
+
             if (me->IsQuestGiver())
                 player->PrepareQuestMenu(me->GetGUID());
 

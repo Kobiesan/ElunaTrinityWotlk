@@ -29,6 +29,7 @@
 #include "QueryPackets.h"
 #include "World.h"
 #include "WorldPacket.h"
+#include "../../scripts/Custom/npc_restricted_skill.h"
 
 void WorldSession::HandleSplitItemOpcode(WorldPacket& recvData)
 {
@@ -601,6 +602,10 @@ void WorldSession::SendListInventory(ObjectGuid vendorGuid)
         _player->SendSellError(SELL_ERR_CANT_FIND_VENDOR, nullptr, ObjectGuid::Empty, 0);
         return;
     }
+
+    // Check NPC skill requirement before opening vendor window
+    if (!CheckNpcSkillRequirement(_player, vendor, UNIT_NPC_FLAG_VENDOR))
+        return;
 
     // remove fake death
     if (GetPlayer()->HasUnitState(UNIT_STATE_DIED))

@@ -34,6 +34,7 @@ EndContentData */
 #include "ScriptedGossip.h"
 #include "SpellAuraEffects.h"
 #include "SpellScript.h"
+#include "../Scripts/Custom/npc_restricted_skill.h"
 
 /*######
 ## npc_shadowfang_prisoner
@@ -125,6 +126,9 @@ public:
 
         bool OnGossipHello(Player* player) override
         {
+            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_GOSSIP))
+                return true;
+
             uint32 gossipMenuId = Player::GetDefaultGossipMenuForSource(me);
             InitGossipMenuFor(player, gossipMenuId);
             if (instance->GetData(TYPE_FREE_NPC) != DONE && instance->GetData(TYPE_RETHILGORE) == DONE)

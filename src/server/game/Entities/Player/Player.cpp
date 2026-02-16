@@ -5636,6 +5636,10 @@ bool Player::UpdateSkillPro(uint16 skillId, int32 chance, uint32 step)
 
     TC_LOG_DEBUG("entities.player.skills", "Player::UpdateSkillPro: Player '{}' ({}), SkillID: {}, Chance: {:3.1f}% taken",
         GetName(), GetGUID().ToString(), skillId, chance / 10.0f);
+
+    // Refresh nearby NPC quest/interaction icons so skill-gated NPCs update immediately
+    SendQuestGiverStatusMultiple();
+
     return true;
 }
 
@@ -5822,6 +5826,9 @@ void Player::SetSkill(uint32 id, uint16 step, uint16 newVal, uint16 maxVal)
                 UpdateSkillEnchantments(id, currVal, newVal);
             UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_REACH_SKILL_LEVEL, id);
             UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILL_LEVEL, id);
+
+            // Refresh nearby NPC quest/interaction icons so skill-gated NPCs update immediately
+            SendQuestGiverStatusMultiple();
         }
         else                                                //remove
         {
@@ -5845,6 +5852,9 @@ void Player::SetSkill(uint32 id, uint16 step, uint16 newVal, uint16 maxVal)
             if (std::vector<SkillLineAbilityEntry const*> const* skillLineAbilities = GetSkillLineAbilitiesBySkill(id))
                 for (SkillLineAbilityEntry const* skillLineAbility : *skillLineAbilities)
                     RemoveSpell(sSpellMgr->GetFirstSpellInChain(skillLineAbility->Spell));
+
+            // Refresh nearby NPC quest/interaction icons so skill-gated NPCs update immediately
+            SendQuestGiverStatusMultiple();
         }
     }
     else if (newVal)                                        //add
@@ -5897,6 +5907,9 @@ void Player::SetSkill(uint32 id, uint16 step, uint16 newVal, uint16 maxVal)
                 LearnSkillRewardedSpells(id, newVal);
                 UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_REACH_SKILL_LEVEL, id);
                 UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILL_LEVEL, id);
+
+                // Refresh nearby NPC quest/interaction icons so skill-gated NPCs update immediately
+                SendQuestGiverStatusMultiple();
                 return;
             }
         }
