@@ -44,6 +44,7 @@
 #include "Trainer.h"
 #include "World.h"
 #include "WorldPacket.h"
+#include "../../scripts/Custom/npc_restricted_skill.h"
 
 enum StableResultCode
 {
@@ -729,6 +730,10 @@ void WorldSession::HandleRepairItemOpcode(WorldPacket& recvData)
         TC_LOG_DEBUG("network", "WORLD: HandleRepairItemOpcode - {} not found or you can not interact with him.", npcGUID.ToString());
         return;
     }
+
+    // Check NPC skill requirement before allowing repair
+    if (!CheckNpcSkillRequirement(_player, unit, UNIT_NPC_FLAG_REPAIR))
+        return;
 
     // remove fake death
     if (GetPlayer()->HasUnitState(UNIT_STATE_DIED))
