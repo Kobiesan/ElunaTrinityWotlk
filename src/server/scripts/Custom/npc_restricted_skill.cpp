@@ -122,6 +122,18 @@ bool CheckNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag
     return true;
 }
 
+bool MeetsNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag)
+{
+    if (!player || !creature)
+        return true;
+
+    SkillRequirement const* req = FindRequirement(creature->GetEntry(), npcFlag);
+    if (!req)
+        return true;
+
+    return MeetsRequirement(player, req);
+}
+
 // Maps a Gossip_Option type to the corresponding UNIT_NPC_FLAG
 static uint32 GossipOptionToNpcFlag(uint32 optionType)
 {

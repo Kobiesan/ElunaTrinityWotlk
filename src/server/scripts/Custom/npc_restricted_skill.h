@@ -12,4 +12,7 @@ class Creature;
 //          Use 0 to check the blanket/catch-all requirement.
 bool CheckNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag = 0);
 
+// Silent version: returns true/false without sending any notification or closing gossip.
+bool MeetsNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag = 0);
+
 #endif // NPC_RESTRICTED_SKILL_H

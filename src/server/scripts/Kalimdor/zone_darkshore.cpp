@@ -34,6 +34,7 @@ EndContentData */
 #include "ScriptedFollowerAI.h"
 #include "Player.h"
 #include "SpellInfo.h"
+#include "../Custom/npc_restricted_skill.h"
 
 /*####
 # npc_kerlonian
@@ -204,6 +205,14 @@ public:
     struct npc_prospector_remtravelAI : public EscortAI
     {
         npc_prospector_remtravelAI(Creature* creature) : EscortAI(creature) { }
+
+        bool OnGossipHello(Player* player) override
+        {
+            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_QUESTGIVER))
+                return true;
+
+            return EscortAI::OnGossipHello(player);
+        }
 
         void Reset() override { }
 

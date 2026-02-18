@@ -1552,6 +1552,14 @@ public:
     {
         npc_pet_trainerAI(Creature* creature) : ScriptedAI(creature) { }
 
+        bool OnGossipHello(Player* player) override
+        {
+            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_GOSSIP))
+                return true;
+
+            return false;
+        }
+
         bool OnGossipSelect(Player* player, uint32 menuId, uint32 gossipListId) override
         {
             if (menuId == MENU_ID_PET_UNLEARN && gossipListId == OPTION_ID_PLEASE_DO)

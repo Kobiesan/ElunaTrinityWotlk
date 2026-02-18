@@ -434,14 +434,17 @@ public:
 
         bool OnGossipHello(Player* player) override
         {
-            if (me->IsQuestGiver())
-                player->PrepareQuestMenu(me->GetGUID());
+            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_GOSSIP))
+                return true;
 
-            if (me->IsVendor())
+            if (me->IsQuestGiver() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_QUESTGIVER))
+                 player->PrepareQuestMenu(me->GetGUID());
+
+            if (me->IsVendor() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_VENDOR))
                 AddGossipItemFor(player, 0, 1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRADE);
 
-            if (me->IsTrainer())
-                AddGossipItemFor(player, 0, 3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRAIN);
+            if (me->IsTrainer() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_TRAINER))
+                    AddGossipItemFor(player, 0, 3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRAIN);
 
             uint32 creatureId = me->GetEntry();
             //WEAPONSMITH & ARMORSMITH
@@ -810,16 +813,16 @@ public:
 
         bool OnGossipHello(Player* player) override
         {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_TRAINER))
+            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_GOSSIP))
                 return true;
 
-            if (me->IsQuestGiver())
+            if (me->IsQuestGiver() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_QUESTGIVER))
                 player->PrepareQuestMenu(me->GetGUID());
 
-            if (me->IsVendor())
+            if (me->IsVendor() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_VENDOR))
                 AddGossipItemFor(player, 0, 1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRADE);
 
-            if (me->IsTrainer())
+            if (me->IsTrainer() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_TRAINER))
                 AddGossipItemFor(player, 0, 3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRAIN);
 
             if (player->HasSkill(SKILL_LEATHERWORKING) && player->GetBaseSkillValue(SKILL_LEATHERWORKING) >= 250 && player->GetLevel() > 49)
