@@ -76,10 +76,16 @@ static SkillRequirement const* FindLowestRequirement(Creature* creature)
         if (!creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
             continue;
 
-        // Flight Masters: the menu must always open so players can fly.
-        // Skip all flags except those that don't belong to the flight
-        // master's core functionality. Individual services like quest
-        // giver are still gated in OnGossipSelect.
+        // Flight Masters: the gossip menu must always open so players can
+        // reach the flight map.  When a flight master also offers quests,
+        // the Blizzlike behaviour is to show a gossip menu with both the
+        // flight option and the quest option -- so we must never block the
+        // menu itself.
+        //
+        // Skip the flight master's core flags (flight, gossip) AND quest
+        // giver from the lowest-requirement calculation so the menu always
+        // opens.  Individual services like quest giver are still gated
+        // per-click in OnGossipSelect.
         if (isTaxi && (flag == UNIT_NPC_FLAG_FLIGHTMASTER ||
             flag == UNIT_NPC_FLAG_GOSSIP ||
             flag == UNIT_NPC_FLAG_QUESTGIVER))
