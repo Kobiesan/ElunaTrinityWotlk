@@ -15,4 +15,12 @@ bool CheckNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag
 // Silent version: returns true/false without sending any notification or closing gossip.
 bool MeetsNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag = 0);
 
+// Checks whether the player can open the gossip dialog with this NPC.
+// For multi-function NPCs, uses the lowest skill requirement across all services.
+// Returns false and sends an error notification if the check fails.
+bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature);
+
+// Maps a Gossip_Option type (GOSSIP_OPTION_VENDOR, etc.) to the corresponding UNIT_NPC_FLAG.
+uint32 GossipOptionToNpcFlag(uint32 optionType);
+
 #endif // NPC_RESTRICTED_SKILL_H

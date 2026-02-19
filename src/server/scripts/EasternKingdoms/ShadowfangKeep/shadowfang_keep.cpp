@@ -34,7 +34,7 @@ EndContentData */
 #include "ScriptedGossip.h"
 #include "SpellAuraEffects.h"
 #include "SpellScript.h"
-#include "../Scripts/Custom/npc_restricted_skill.h"
+#include "../../Custom/npc_restricted_skill.h"
 
 /*######
 ## npc_shadowfang_prisoner

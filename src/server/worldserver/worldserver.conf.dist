@@ -1108,10 +1108,11 @@ Guild.BankEventLogRecordsCount = 25
 #
 #    MaxPrimaryTradeSkill
 #        Description: Maximum number of primary professions a character can learn.
+#                     Set to 11 to allow all professions (unlimited).
 #        Range:       0-11
-#        Default:     2
+#        Default:     11
 
-MaxPrimaryTradeSkill = 2
+MaxPrimaryTradeSkill = 11
 
 #
 #    MinPetitionSigns

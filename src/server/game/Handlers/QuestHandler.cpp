@@ -37,7 +37,7 @@
 #endif
 #include "World.h"
 #include "WorldPacket.h"
-#include "../Scripts/Custom/npc_restricted_skill.h"
+#include "../../scripts/Custom/npc_restricted_skill.h"
 
 void WorldSession::HandleQuestgiverStatusQueryOpcode(WorldPacket& recvData)
 {

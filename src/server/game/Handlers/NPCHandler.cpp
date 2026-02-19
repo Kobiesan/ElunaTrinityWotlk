@@ -187,6 +187,11 @@ void WorldSession::HandleGossipHelloOpcode(WorldPacket& recvData)
     }
 
     _player->PlayerTalkClass->ClearMenus();
+
+    // Check NPC skill requirements before allowing interaction
+    if (!CheckNpcSkillRequirementForGossipHello(_player, unit))
+        return;
+
 #ifdef ELUNA
     if (Eluna* e = GetPlayer()->GetEluna())
         if (e->OnGossipHello(_player, unit))
