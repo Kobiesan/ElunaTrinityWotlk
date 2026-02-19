@@ -4,13 +4,13 @@
 #include "WorldSession.h"
 #include "ScriptedGossip.h"
 #include "DatabaseEnv.h"
+#include "DBCStores.h"
 #include "Log.h"
 
 struct SkillRequirement
 {
     uint32 skillId;
     uint32 skillLevel;
-    std::string errorMessage;
 };
 
 struct PairHash
@@ -121,15 +121,65 @@ static bool MeetsRequirements(Player* player, std::vector<SkillRequirement> cons
     return false;
 }
 
-// Sends all error messages from the requirement group to the player
-static void SendRequirementErrors(Player* player, std::vector<SkillRequirement> const* reqs)
+static char const* NpcFlagToServiceName(uint32 npcFlag)
 {
-    if (!reqs)
+    switch (npcFlag)
+    {
+    case UNIT_NPC_FLAG_TRAINER:         return "trainer";
+    case UNIT_NPC_FLAG_VENDOR:          return "vendor";
+    case UNIT_NPC_FLAG_QUESTGIVER:      return "quest giver";
+    case UNIT_NPC_FLAG_FLIGHTMASTER:    return "flight master";
+    case UNIT_NPC_FLAG_INNKEEPER:       return "innkeeper";
+    case UNIT_NPC_FLAG_BANKER:          return "banker";
+    case UNIT_NPC_FLAG_AUCTIONEER:      return "auctioneer";
+    case UNIT_NPC_FLAG_STABLEMASTER:    return "stable master";
+    case UNIT_NPC_FLAG_PETITIONER:      return "guild master";
+    case UNIT_NPC_FLAG_TABARDDESIGNER:  return "tabard designer";
+    case UNIT_NPC_FLAG_BATTLEMASTER:    return "battlemaster";
+    case UNIT_NPC_FLAG_SPIRITHEALER:    return "spirit healer";
+    case UNIT_NPC_FLAG_REPAIR:          return "armorer";
+    case UNIT_NPC_FLAG_GUILD_BANKER:    return "guild banker";
+    case UNIT_NPC_FLAG_MAILBOX:         return "mailbox";
+    default:                            return "NPC";
+    }
+}
+
+static char const* GetSkillName(uint32 skillId)
+{
+    SkillLineEntry const* entry = sSkillLineStore.LookupEntry(skillId);
+    if (entry && entry->DisplayName[0] && entry->DisplayName[0][0] != '\0')
+        return entry->DisplayName[0];
+    return "Unknown";
+}
+
+// Builds a combined message like:
+//   "You need 75 Dwarvish, 75 Gnomish, or 75 Orcish to speak with this trainer."
+static void SendRequirementErrors(Player* player, std::vector<SkillRequirement> const* reqs, uint32 npcFlag = 0)
+{
+    if (!reqs || reqs->empty())
         return;
 
-    for (SkillRequirement const& req : *reqs)
-        if (!req.errorMessage.empty())
-            player->GetSession()->SendNotification("%s", req.errorMessage.c_str());
+    std::string message = "You need ";
+    for (size_t i = 0; i < reqs->size(); ++i)
+    {
+        if (i > 0)
+        {
+            if (reqs->size() == 2)
+                message += " or ";
+            else if (i == reqs->size() - 1)
+                message += ", or ";
+            else
+                message += ", ";
+        }
+        message += std::to_string((*reqs)[i].skillLevel);
+        message += " ";
+        message += GetSkillName((*reqs)[i].skillId);
+    }
+    message += " to speak with this ";
+    message += NpcFlagToServiceName(npcFlag);
+    message += ".";
+
+    player->GetSession()->SendNotification("%s", message.c_str());
 }
 
 // Public function so other scripts can check skill requirements
@@ -144,7 +194,7 @@ bool CheckNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag
 
     if (!MeetsRequirements(player, reqs))
     {
-        SendRequirementErrors(player, reqs);
+        SendRequirementErrors(player, reqs, npcFlag);
         CloseGossipMenuFor(player);
         return false;
     }
@@ -209,6 +259,7 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
         bool isTaxi = creature->IsTaxi();
         bool meetsAny = false;
         std::vector<SkillRequirement> const* firstFailedReqs = nullptr;
+        uint32 firstFailedFlag = 0;
 
         for (uint32 flag : NPC_SERVICE_FLAGS)
         {
@@ -225,7 +276,10 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
                 continue;
 
             if (!firstFailedReqs)
+            {
                 firstFailedReqs = reqs;
+                firstFailedFlag = flag;
+            }
 
             if (MeetsRequirements(player, reqs))
             {
@@ -236,7 +290,7 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
 
         if (!meetsAny)
         {
-            SendRequirementErrors(player, firstFailedReqs);
+            SendRequirementErrors(player, firstFailedReqs, firstFailedFlag);
             CloseGossipMenuFor(player);
             return false;
         }
@@ -260,7 +314,7 @@ public:
         skillRequirements.clear();
 
         QueryResult result = WorldDatabase.Query(
-            "SELECT entry, npc_flag, skill_id, skill_level, error_message "
+            "SELECT entry, npc_flag, skill_id, skill_level "
             "FROM npc_skill_requirements");
         if (!result)
             return;
@@ -275,7 +329,6 @@ public:
             SkillRequirement req;
             req.skillId = fields[2].GetUInt16();
             req.skillLevel = fields[3].GetUInt16();
-            req.errorMessage = fields[4].GetString();
 
             skillRequirements[{ entry, npcFlag }].push_back(req);
             ++count;
