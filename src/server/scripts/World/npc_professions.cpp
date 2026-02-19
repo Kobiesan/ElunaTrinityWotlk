@@ -32,7 +32,6 @@ EndScriptData */
 #include "SpellInfo.h"
 #include "SpellMgr.h"
 #include "WorldSession.h"
-#include "../Custom/npc_restricted_skill.h"
 
 /*
 A few notes for future developement:
@@ -434,16 +433,13 @@ public:
 
         bool OnGossipHello(Player* player) override
         {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_GOSSIP))
-                return true;
+            if (me->IsQuestGiver())
+                player->PrepareQuestMenu(me->GetGUID());
 
-            if (me->IsQuestGiver() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_QUESTGIVER))
-                 player->PrepareQuestMenu(me->GetGUID());
-
-            if (me->IsVendor() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_VENDOR))
+            if (me->IsVendor())
                 AddGossipItemFor(player, 0, 1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRADE);
 
-            if (me->IsTrainer() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_TRAINER))
+            if (me->IsTrainer())
                     AddGossipItemFor(player, 0, 3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRAIN);
 
             uint32 creatureId = me->GetEntry();
@@ -813,16 +809,13 @@ public:
 
         bool OnGossipHello(Player* player) override
         {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_GOSSIP))
-                return true;
-
-            if (me->IsQuestGiver() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_QUESTGIVER))
+            if (me->IsQuestGiver())
                 player->PrepareQuestMenu(me->GetGUID());
 
-            if (me->IsVendor() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_VENDOR))
+            if (me->IsVendor())
                 AddGossipItemFor(player, 0, 1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRADE);
 
-            if (me->IsTrainer() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_TRAINER))
+            if (me->IsTrainer())
                 AddGossipItemFor(player, 0, 3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRAIN);
 
             if (player->HasSkill(SKILL_LEATHERWORKING) && player->GetBaseSkillValue(SKILL_LEATHERWORKING) >= 250 && player->GetLevel() > 49)

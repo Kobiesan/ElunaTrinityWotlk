@@ -29,7 +29,6 @@ EndScriptData */
 #include "GameEventMgr.h"
 #include "Player.h"
 #include "WorldSession.h"
-#include "../Custom/npc_restricted_skill.h"
 
 enum Spells
 {
@@ -54,20 +53,17 @@ public:
 
         bool OnGossipHello(Player* player) override
         {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_GOSSIP))
-                return true;
-
             InitGossipMenuFor(player, NPC_GOSSIP_MENU);
             if (IsHolidayActive(HOLIDAY_HALLOWS_END) && !player->HasAura(SPELL_TRICK_OR_TREATED))
                 AddGossipItemFor(player, NPC_GOSSIP_MENU_EVENT, 0, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
 
-            if (me->IsQuestGiver() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_QUESTGIVER))
+            if (me->IsQuestGiver())
                 player->PrepareQuestMenu(me->GetGUID());
 
-            if (me->IsVendor() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_VENDOR))
+            if (me->IsVendor())
                 AddGossipItemFor(player, NPC_GOSSIP_MENU, 2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRADE);
 
-            if (me->IsInnkeeper() && MeetsNpcSkillRequirement(player, me, UNIT_NPC_FLAG_INNKEEPER))
+            if (me->IsInnkeeper())
                 AddGossipItemFor(player, NPC_GOSSIP_MENU, 1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INN);
 
             player->TalkedToCreature(me->GetEntry(), me->GetGUID());
