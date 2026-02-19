@@ -121,13 +121,15 @@ static bool MeetsRequirements(Player* player, std::vector<SkillRequirement> cons
     return false;
 }
 
-// Returns the error message from the first requirement in the group (used for notification)
-static std::string const& GetRequirementErrorMessage(std::vector<SkillRequirement> const* reqs)
+// Sends all error messages from the requirement group to the player
+static void SendRequirementErrors(Player* player, std::vector<SkillRequirement> const* reqs)
 {
-    static std::string empty;
-    if (!reqs || reqs->empty())
-        return empty;
-    return reqs->front().errorMessage;
+    if (!reqs)
+        return;
+
+    for (SkillRequirement const& req : *reqs)
+        if (!req.errorMessage.empty())
+            player->GetSession()->SendNotification("%s", req.errorMessage.c_str());
 }
 
 // Public function so other scripts can check skill requirements
@@ -142,7 +144,7 @@ bool CheckNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag
 
     if (!MeetsRequirements(player, reqs))
     {
-        player->GetSession()->SendNotification("%s", GetRequirementErrorMessage(reqs).c_str());
+        SendRequirementErrors(player, reqs);
         CloseGossipMenuFor(player);
         return false;
     }
@@ -206,7 +208,7 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
         // by re-checking each flag's requirements with OR logic
         bool isTaxi = creature->IsTaxi();
         bool meetsAny = false;
-        std::string errorMessage;
+        std::vector<SkillRequirement> const* firstFailedReqs = nullptr;
 
         for (uint32 flag : NPC_SERVICE_FLAGS)
         {
@@ -222,8 +224,8 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
             if (!reqs)
                 continue;
 
-            if (errorMessage.empty())
-                errorMessage = GetRequirementErrorMessage(reqs);
+            if (!firstFailedReqs)
+                firstFailedReqs = reqs;
 
             if (MeetsRequirements(player, reqs))
             {
@@ -234,7 +236,7 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
 
         if (!meetsAny)
         {
-            player->GetSession()->SendNotification("%s", errorMessage.c_str());
+            SendRequirementErrors(player, firstFailedReqs);
             CloseGossipMenuFor(player);
             return false;
         }
