@@ -3469,7 +3469,15 @@ void Player::RemoveSpell(uint32 spell_id, bool disabled, bool learn_low_rank)
             SetUsedTalentCount(0);
     }
 
+    // update free primary prof.points (if not overflow setting, can be in case GM use before .learn prof. learning)
+    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spell_id);
     // Unlimited professions: profession points are no longer incremented on unlearn
+    //if (spellInfo && spellInfo->IsPrimaryProfessionFirstRank())
+    //{
+    //    uint32 freeProfs = GetFreePrimaryProfessionPoints() + 1;
+    //    if (freeProfs <= sWorld->getIntConfig(CONFIG_MAX_PRIMARY_TRADE_SKILL))
+    //        SetFreePrimaryProfessions(freeProfs);
+    //}
 
     // remove dependent skill
     SpellLearnSkillNode const* spellLearnSkill = sSpellMgr->GetSpellLearnSkill(spell_id);
