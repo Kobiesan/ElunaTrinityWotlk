@@ -69,6 +69,10 @@ void WorldSession::HandleTabardVendorActivateOpcode(WorldPacket& recvData)
         return;
     }
 
+    // Check NPC skill requirement before opening tabard designer
+    if (!CheckNpcSkillRequirement(_player, unit, UNIT_NPC_FLAG_TABARDDESIGNER))
+        return;
+
     // remove fake death
     if (GetPlayer()->HasUnitState(UNIT_STATE_DIED))
         GetPlayer()->RemoveAurasByType(SPELL_AURA_FEIGN_DEATH);
@@ -98,6 +102,10 @@ void WorldSession::HandleTrainerListOpcode(WorldPackets::NPC::Hello& packet)
         TC_LOG_DEBUG("network", "WorldSession: SendTrainerList - {} not found or you can not interact with him.", packet.Unit.ToString());
         return;
     }
+
+    // Check NPC skill requirement before showing trainer list
+    if (!CheckNpcSkillRequirement(_player, npc, UNIT_NPC_FLAG_TRAINER))
+        return;
 
     SendTrainerList(npc);
 }
@@ -134,6 +142,10 @@ void WorldSession::HandleTrainerBuySpellOpcode(WorldPackets::NPC::TrainerBuySpel
         TC_LOG_DEBUG("network", "WORLD: HandleTrainerBuySpellOpcode - {} not found or you can not interact with him.", packet.TrainerGUID.ToString());
         return;
     }
+
+    // Check NPC skill requirement before allowing spell purchase
+    if (!CheckNpcSkillRequirement(_player, npc, UNIT_NPC_FLAG_TRAINER))
+        return;
 
     // remove fake death
     if (GetPlayer()->HasUnitState(UNIT_STATE_DIED))
@@ -219,6 +231,10 @@ void WorldSession::HandleSpiritHealerActivateOpcode(WorldPacket& recvData)
         return;
     }
 
+    // Check NPC skill requirement before spirit healer activation
+    if (!CheckNpcSkillRequirement(_player, unit, UNIT_NPC_FLAG_SPIRITHEALER))
+        return;
+
     // remove fake death
     if (GetPlayer()->HasUnitState(UNIT_STATE_DIED))
         GetPlayer()->RemoveAurasByType(SPELL_AURA_FEIGN_DEATH);
@@ -268,6 +284,10 @@ void WorldSession::HandleBinderActivateOpcode(WorldPacket& recvData)
         TC_LOG_DEBUG("network", "WORLD: HandleBinderActivateOpcode - {} not found or you can not interact with him.", npcGUID.ToString());
         return;
     }
+
+    // Check NPC skill requirement before binding at innkeeper
+    if (!CheckNpcSkillRequirement(_player, unit, UNIT_NPC_FLAG_INNKEEPER))
+        return;
 
     // remove fake death
     if (GetPlayer()->HasUnitState(UNIT_STATE_DIED))

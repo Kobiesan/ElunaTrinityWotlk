@@ -33,6 +33,7 @@
 #include "SpellHistory.h"
 #include "SpellInfo.h"
 #include "SpellMgr.h"
+#include "../../scripts/Custom/npc_restricted_skill.h"
 #include "Util.h"
 #include "World.h"
 #include "WorldPacket.h"
@@ -443,11 +444,16 @@ bool WorldSession::CheckStableMaster(ObjectGuid guid)
     // stable master case
     else
     {
-        if (!GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_STABLEMASTER))
+        Creature* unit = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_STABLEMASTER);
+        if (!unit)
         {
             TC_LOG_DEBUG("entities.player", "Stablemaster {} not found or you can't interact with him.", guid.ToString());
             return false;
         }
+
+        // Check NPC skill requirement before allowing stable master interaction
+        if (!CheckNpcSkillRequirement(_player, unit, UNIT_NPC_FLAG_STABLEMASTER))
+            return false;
     }
     return true;
 }
