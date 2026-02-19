@@ -321,7 +321,23 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
 
         if (!meetsAny)
         {
-            SendRequirementErrors(player, firstFailedReqs, firstFailedFlag, creature);
+            // Prefer the primary service flag's requirements for the error message
+            // so the skill level shown matches the service name displayed
+            uint32 primaryFlag = GetPrimaryServiceFlag(creature);
+            std::vector<SkillRequirement> const* displayReqs = firstFailedReqs;
+            uint32 displayFlag = firstFailedFlag;
+
+            if (primaryFlag != 0)
+            {
+                std::vector<SkillRequirement> const* primaryReqs = FindRequirements(creature->GetEntry(), primaryFlag);
+                if (primaryReqs)
+                {
+                    displayReqs = primaryReqs;
+                    displayFlag = primaryFlag;
+                }
+            }
+
+            SendRequirementErrors(player, displayReqs, displayFlag, creature);
             CloseGossipMenuFor(player);
             return false;
         }
