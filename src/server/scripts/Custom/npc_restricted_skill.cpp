@@ -152,9 +152,27 @@ static char const* GetSkillName(uint32 skillId)
     return "Unknown";
 }
 
+// Determines the most meaningful service flag from a creature's NPC flags
+static uint32 GetPrimaryServiceFlag(Creature* creature)
+{
+    if (!creature)
+        return 0;
+
+    for (uint32 flag : NPC_SERVICE_FLAGS)
+    {
+        // Skip GOSSIP and QUESTGIVER as they are too generic for service identification
+        if (flag == UNIT_NPC_FLAG_GOSSIP || flag == UNIT_NPC_FLAG_QUESTGIVER)
+            continue;
+        if (creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
+            return flag;
+    }
+    return 0;
+}
+
 // Builds a combined message like:
 //   "You need 75 Dwarvish, 75 Gnomish, or 75 Orcish to speak with this trainer."
-static void SendRequirementErrors(Player* player, std::vector<SkillRequirement> const* reqs, uint32 npcFlag = 0)
+//   "You need 75 Dwarvish to repair items at this vendor."
+static void SendRequirementErrors(Player* player, std::vector<SkillRequirement> const* reqs, uint32 npcFlag = 0, Creature* creature = nullptr)
 {
     if (!reqs || reqs->empty())
         return;
@@ -175,9 +193,22 @@ static void SendRequirementErrors(Player* player, std::vector<SkillRequirement> 
         message += " ";
         message += GetSkillName((*reqs)[i].skillId);
     }
-    message += " to speak with this ";
-    message += NpcFlagToServiceName(npcFlag);
-    message += ".";
+
+    if (npcFlag == UNIT_NPC_FLAG_REPAIR)
+    {
+        message += " to repair items at this vendor.";
+    }
+    else
+    {
+        // When npcFlag is generic (0 or GOSSIP), try to determine a better name
+        uint32 displayFlag = npcFlag;
+        if (creature && (displayFlag == 0 || displayFlag == UNIT_NPC_FLAG_GOSSIP))
+            displayFlag = GetPrimaryServiceFlag(creature);
+
+        message += " to speak with this ";
+        message += NpcFlagToServiceName(displayFlag);
+        message += ".";
+    }
 
     player->GetSession()->SendNotification("%s", message.c_str());
 }
@@ -194,7 +225,7 @@ bool CheckNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag
 
     if (!MeetsRequirements(player, reqs))
     {
-        SendRequirementErrors(player, reqs, npcFlag);
+        SendRequirementErrors(player, reqs, npcFlag, creature);
         CloseGossipMenuFor(player);
         return false;
     }
@@ -290,7 +321,7 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
 
         if (!meetsAny)
         {
-            SendRequirementErrors(player, firstFailedReqs, firstFailedFlag);
+            SendRequirementErrors(player, firstFailedReqs, firstFailedFlag, creature);
             CloseGossipMenuFor(player);
             return false;
         }
