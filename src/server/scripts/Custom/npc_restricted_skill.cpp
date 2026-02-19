@@ -171,7 +171,7 @@ static uint32 GetPrimaryServiceFlag(Creature* creature)
 
 // Builds a combined message like:
 //   "You need 75 Dwarvish, 75 Gnomish, or 75 Orcish to speak with this trainer."
-//   "You need 75 Dwarvish to repair items at this vendor."
+//   "You need 75 Dwarvish to repair items at this armorer."
 static void SendRequirementErrors(Player* player, std::vector<SkillRequirement> const* reqs, uint32 npcFlag = 0, Creature* creature = nullptr)
 {
     if (!reqs || reqs->empty())
@@ -196,7 +196,7 @@ static void SendRequirementErrors(Player* player, std::vector<SkillRequirement> 
 
     if (npcFlag == UNIT_NPC_FLAG_REPAIR)
     {
-        message += " to repair items at this vendor.";
+        message += " to repair items at this armorer.";
     }
     else
     {
