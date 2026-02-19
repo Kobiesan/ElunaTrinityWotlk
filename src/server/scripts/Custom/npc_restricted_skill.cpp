@@ -140,7 +140,7 @@ static char const* NpcFlagToServiceName(uint32 npcFlag)
     case UNIT_NPC_FLAG_REPAIR:          return "armorer";
     case UNIT_NPC_FLAG_GUILD_BANKER:    return "guild banker";
     case UNIT_NPC_FLAG_MAILBOX:         return "mailbox";
-    default:                            return "NPC";
+    default:                            return "character";
     }
 }
 
