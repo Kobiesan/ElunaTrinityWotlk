@@ -48,19 +48,6 @@ namespace Trainer
             if (!player->IsSpellFitByClassAndRace(trainerSpell.SpellId))
                 continue;
 
-            SpellInfo const* trainerSpellInfo = sSpellMgr->AssertSpellInfo(trainerSpell.SpellId);
-
-            bool primaryProfessionFirstRank = false;
-            for (SpellEffectInfo const& spellEffectInfo : trainerSpellInfo->GetEffects())
-            {
-                if (!spellEffectInfo.IsEffect(SPELL_EFFECT_LEARN_SPELL))
-                    continue;
-
-                SpellInfo const* learnedSpellInfo = sSpellMgr->GetSpellInfo(spellEffectInfo.TriggerSpell);
-                if (learnedSpellInfo && learnedSpellInfo->IsPrimaryProfessionFirstRank())
-                    primaryProfessionFirstRank = true;
-            }
-
             trainerList.Spells.emplace_back();
             WorldPackets::NPC::TrainerListSpell& trainerListSpell = trainerList.Spells.back();
             trainerListSpell.SpellID = trainerSpell.SpellId;
@@ -135,16 +122,6 @@ namespace Trainer
         SpellState state = GetSpellState(player, trainerSpell);
         if (state != SpellState::Available)
             return false;
-
-        SpellInfo const* trainerSpellInfo = sSpellMgr->AssertSpellInfo(trainerSpell->SpellId);
-
-        for (SpellEffectInfo const& spellEffectInfo : trainerSpellInfo->GetEffects())
-        {
-            if (!spellEffectInfo.IsEffect(SPELL_EFFECT_LEARN_SPELL))
-                continue;
-
-            // Profession point check removed: players can learn unlimited professions
-        }
 
         return true;
     }

@@ -34,6 +34,7 @@
 #include "Util.h"
 #include "World.h"
 #include "WorldPacket.h"
+#include "../../scripts/Custom/npc_restricted_skill.h"
 
 //void called when player click on auctioneer npc
 void WorldSession::HandleAuctionHelloOpcode(WorldPacket& recvData)
@@ -47,6 +48,10 @@ void WorldSession::HandleAuctionHelloOpcode(WorldPacket& recvData)
         TC_LOG_DEBUG("network", "WORLD: HandleAuctionHelloOpcode - Unit ({}) not found or you can't interact with him.", guid.ToString());
         return;
     }
+
+    // Check NPC skill requirement before opening auction house
+    if (!CheckNpcSkillRequirement(_player, unit, UNIT_NPC_FLAG_AUCTIONEER))
+        return;
 
     // remove fake death
     if (GetPlayer()->HasUnitState(UNIT_STATE_DIED))

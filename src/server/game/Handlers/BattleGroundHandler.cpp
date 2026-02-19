@@ -38,11 +38,16 @@
 #include "ObjectAccessor.h"
 #include "Player.h"
 #include "World.h"
+#include "../../scripts/Custom/npc_restricted_skill.h"
 
 void WorldSession::HandleBattlemasterHelloOpcode(WorldPackets::NPC::Hello& hello)
 {
     Creature* unit = GetPlayer()->GetNPCIfCanInteractWith(hello.Unit, UNIT_NPC_FLAG_BATTLEMASTER);
     if (!unit)
+        return;
+
+    // Check NPC skill requirement before opening battlemaster window
+    if (!CheckNpcSkillRequirement(_player, unit, UNIT_NPC_FLAG_BATTLEMASTER))
         return;
 
     // Stop the npc if moving

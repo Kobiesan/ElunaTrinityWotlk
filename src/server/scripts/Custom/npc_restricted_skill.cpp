@@ -21,10 +21,10 @@ struct PairHash
     }
 };
 
-// Key: { creature entry, npc_flag }
-static std::unordered_map<std::pair<uint32, uint32>, SkillRequirement, PairHash> skillRequirements;
+// Key: { creature entry, npc_flag } -> vector of alternatives (OR logic)
+static std::unordered_map<std::pair<uint32, uint32>, std::vector<SkillRequirement>, PairHash> skillRequirements;
 
-static SkillRequirement const* FindRequirement(uint32 entry, uint32 npcFlag)
+static std::vector<SkillRequirement> const* FindRequirements(uint32 entry, uint32 npcFlag)
 {
     // First try the specific flag
     auto itr = skillRequirements.find({ entry, npcFlag });
@@ -42,69 +42,92 @@ static SkillRequirement const* FindRequirement(uint32 entry, uint32 npcFlag)
     return nullptr;
 }
 
+static constexpr uint32 NPC_SERVICE_FLAGS[] =
+{
+    UNIT_NPC_FLAG_GOSSIP,
+    UNIT_NPC_FLAG_QUESTGIVER,
+    UNIT_NPC_FLAG_TRAINER,
+    UNIT_NPC_FLAG_VENDOR,
+    UNIT_NPC_FLAG_REPAIR,
+    UNIT_NPC_FLAG_INNKEEPER,
+    UNIT_NPC_FLAG_BANKER,
+    UNIT_NPC_FLAG_PETITIONER,
+    UNIT_NPC_FLAG_TABARDDESIGNER,
+    UNIT_NPC_FLAG_FLIGHTMASTER,
+    UNIT_NPC_FLAG_BATTLEMASTER,
+    UNIT_NPC_FLAG_SPIRITHEALER,
+    UNIT_NPC_FLAG_AUCTIONEER,
+    UNIT_NPC_FLAG_STABLEMASTER,
+    UNIT_NPC_FLAG_GUILD_BANKER,
+    UNIT_NPC_FLAG_MAILBOX
+};
+
 // Returns the lowest skill requirement among all flags this creature has.
 // If the player meets this, they qualify for at least one service.
-static SkillRequirement const* FindLowestRequirement(Creature* creature)
+// With OR-logic, a group's "effective level" is the minimum among its alternatives.
+static uint32 FindLowestRequirementLevel(Creature* creature)
 {
-    static constexpr uint32 checkedFlags[] =
-    {
-        UNIT_NPC_FLAG_GOSSIP,
-        UNIT_NPC_FLAG_QUESTGIVER,
-        UNIT_NPC_FLAG_TRAINER,
-        UNIT_NPC_FLAG_VENDOR,
-        UNIT_NPC_FLAG_REPAIR,
-        UNIT_NPC_FLAG_INNKEEPER,
-        UNIT_NPC_FLAG_BANKER,
-        UNIT_NPC_FLAG_PETITIONER,
-        UNIT_NPC_FLAG_TABARDDESIGNER,
-        UNIT_NPC_FLAG_FLIGHTMASTER,
-        UNIT_NPC_FLAG_BATTLEMASTER,
-        UNIT_NPC_FLAG_SPIRITHEALER,
-        UNIT_NPC_FLAG_AUCTIONEER,
-        UNIT_NPC_FLAG_STABLEMASTER,
-        UNIT_NPC_FLAG_GUILD_BANKER,
-        UNIT_NPC_FLAG_MAILBOX
-    };
-
     bool isTaxi = creature->IsTaxi();
     uint32 entry = creature->GetEntry();
-    SkillRequirement const* lowest = nullptr;
+    uint32 lowestLevel = UINT32_MAX;
+    bool found = false;
 
-    for (uint32 flag : checkedFlags)
+    for (uint32 flag : NPC_SERVICE_FLAGS)
     {
         if (!creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
             continue;
 
-        // Flight Masters: the gossip menu must always open so players can
-        // reach the flight map.  When a flight master also offers quests,
-        // the Blizzlike behaviour is to show a gossip menu with both the
-        // flight option and the quest option -- so we must never block the
-        // menu itself.
-        //
-        // Skip the flight master's core flags (flight, gossip) AND quest
-        // giver from the lowest-requirement calculation so the menu always
-        // opens.  Individual services like quest giver are still gated
-        // per-click in OnGossipSelect.
         if (isTaxi && (flag == UNIT_NPC_FLAG_FLIGHTMASTER ||
             flag == UNIT_NPC_FLAG_GOSSIP ||
             flag == UNIT_NPC_FLAG_QUESTGIVER))
             continue;
 
-        SkillRequirement const* req = FindRequirement(entry, flag);
-        if (req && (!lowest || req->skillLevel < lowest->skillLevel))
-            lowest = req;
+        std::vector<SkillRequirement> const* reqs = FindRequirements(entry, flag);
+        if (!reqs)
+            continue;
+
+        // With OR logic, a group's effective level is the minimum across alternatives
+        for (SkillRequirement const& req : *reqs)
+        {
+            if (req.skillLevel < lowestLevel)
+            {
+                lowestLevel = req.skillLevel;
+                found = true;
+            }
+        }
     }
 
-    return lowest;
+    return found ? lowestLevel : 0;
 }
 
-static bool MeetsRequirement(Player* player, SkillRequirement const* req)
+static bool MeetsSingleRequirement(Player* player, SkillRequirement const& req)
 {
-    if (!req)
+    return player->HasSkill(req.skillId) &&
+        player->GetSkillValue(req.skillId) >= req.skillLevel;
+}
+
+// OR logic: player must meet at least one requirement in the group
+static bool MeetsRequirements(Player* player, std::vector<SkillRequirement> const* reqs)
+{
+    if (!reqs || reqs->empty())
         return true;
 
-    return player->HasSkill(req->skillId) &&
-        player->GetSkillValue(req->skillId) >= req->skillLevel;
+    for (SkillRequirement const& req : *reqs)
+    {
+        if (MeetsSingleRequirement(player, req))
+            return true;
+    }
+
+    return false;
+}
+
+// Returns the error message from the first requirement in the group (used for notification)
+static std::string const& GetRequirementErrorMessage(std::vector<SkillRequirement> const* reqs)
+{
+    static std::string empty;
+    if (!reqs || reqs->empty())
+        return empty;
+    return reqs->front().errorMessage;
 }
 
 // Public function so other scripts can check skill requirements
@@ -113,13 +136,13 @@ bool CheckNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag
     if (!player || !creature)
         return true;
 
-    SkillRequirement const* req = FindRequirement(creature->GetEntry(), npcFlag);
-    if (!req)
+    std::vector<SkillRequirement> const* reqs = FindRequirements(creature->GetEntry(), npcFlag);
+    if (!reqs)
         return true;
 
-    if (!MeetsRequirement(player, req))
+    if (!MeetsRequirements(player, reqs))
     {
-        player->GetSession()->SendNotification("%s", req->errorMessage.c_str());
+        player->GetSession()->SendNotification("%s", GetRequirementErrorMessage(reqs).c_str());
         CloseGossipMenuFor(player);
         return false;
     }
@@ -132,11 +155,11 @@ bool MeetsNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag
     if (!player || !creature)
         return true;
 
-    SkillRequirement const* req = FindRequirement(creature->GetEntry(), npcFlag);
-    if (!req)
+    std::vector<SkillRequirement> const* reqs = FindRequirements(creature->GetEntry(), npcFlag);
+    if (!reqs)
         return true;
 
-    return MeetsRequirement(player, req);
+    return MeetsRequirements(player, reqs);
 }
 
 // Maps a Gossip_Option type to the corresponding UNIT_NPC_FLAG
@@ -176,12 +199,45 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
 
     // Find the lowest skill requirement across all this NPC's flags.
     // If the player can't even meet the easiest one, block entirely.
-    SkillRequirement const* lowest = FindLowestRequirement(creature);
-    if (lowest && !MeetsRequirement(player, lowest))
+    uint32 lowestLevel = FindLowestRequirementLevel(creature);
+    if (lowestLevel > 0)
     {
-        player->GetSession()->SendNotification("%s", lowest->errorMessage.c_str());
-        CloseGossipMenuFor(player);
-        return false;
+        // Check if the player meets ANY requirement across all flags
+        // by re-checking each flag's requirements with OR logic
+        bool isTaxi = creature->IsTaxi();
+        bool meetsAny = false;
+        std::string errorMessage;
+
+        for (uint32 flag : NPC_SERVICE_FLAGS)
+        {
+            if (!creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
+                continue;
+
+            if (isTaxi && (flag == UNIT_NPC_FLAG_FLIGHTMASTER ||
+                flag == UNIT_NPC_FLAG_GOSSIP ||
+                flag == UNIT_NPC_FLAG_QUESTGIVER))
+                continue;
+
+            std::vector<SkillRequirement> const* reqs = FindRequirements(creature->GetEntry(), flag);
+            if (!reqs)
+                continue;
+
+            if (errorMessage.empty())
+                errorMessage = GetRequirementErrorMessage(reqs);
+
+            if (MeetsRequirements(player, reqs))
+            {
+                meetsAny = true;
+                break;
+            }
+        }
+
+        if (!meetsAny)
+        {
+            player->GetSession()->SendNotification("%s", errorMessage.c_str());
+            CloseGossipMenuFor(player);
+            return false;
+        }
     }
 
     return true;
@@ -219,7 +275,7 @@ public:
             req.skillLevel = fields[3].GetUInt16();
             req.errorMessage = fields[4].GetString();
 
-            skillRequirements[{ entry, npcFlag }] = req;
+            skillRequirements[{ entry, npcFlag }].push_back(req);
             ++count;
 
         } while (result->NextRow());
