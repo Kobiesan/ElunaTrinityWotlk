@@ -3,7 +3,6 @@
 #include "Player.h"
 #include "WorldSession.h"
 #include "ScriptedGossip.h"
-#include "ScriptedCreature.h"
 #include "DatabaseEnv.h"
 #include "Log.h"
 
@@ -141,7 +140,7 @@ bool MeetsNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag
 }
 
 // Maps a Gossip_Option type to the corresponding UNIT_NPC_FLAG
-static uint32 GossipOptionToNpcFlag(uint32 optionType)
+uint32 GossipOptionToNpcFlag(uint32 optionType)
 {
     switch (optionType)
     {
@@ -166,214 +165,27 @@ static uint32 GossipOptionToNpcFlag(uint32 optionType)
     }
 }
 
-// Counts how many NPC interaction flags this creature has (including gossip)
-static int CountServiceFlags(Creature* creature)
+bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
 {
-    int count = 0;
-    if (creature->HasNpcFlag(UNIT_NPC_FLAG_GOSSIP))         ++count;
-    if (creature->IsQuestGiver())   ++count;
-    if (creature->IsVendor())       ++count;
-    if (creature->IsTrainer())      ++count;
-    if (creature->IsBanker())       ++count;
-    if (creature->IsInnkeeper())    ++count;
-    if (creature->IsAuctioner())    ++count;
-    if (creature->IsTaxi())         ++count;
-    if (creature->IsGuildMaster())  ++count;
-    if (creature->IsBattleMaster()) ++count;
-    if (creature->IsTabardDesigner()) ++count;
-    if (creature->IsSpiritHealer()) ++count;
-    if (creature->IsArmorer())      ++count;
-    if (creature->HasNpcFlag(UNIT_NPC_FLAG_STABLEMASTER))   ++count;
-    if (creature->HasNpcFlag(UNIT_NPC_FLAG_GUILD_BANKER))   ++count;
-    if (creature->HasNpcFlag(UNIT_NPC_FLAG_MAILBOX))        ++count;
-    return count;
+    if (!player || !creature)
+        return true;
+
+    // Blanket check (npc_flag = 0) blocks everything
+    if (!CheckNpcSkillRequirement(player, creature, 0))
+        return false;
+
+    // Find the lowest skill requirement across all this NPC's flags.
+    // If the player can't even meet the easiest one, block entirely.
+    SkillRequirement const* lowest = FindLowestRequirement(creature);
+    if (lowest && !MeetsRequirement(player, lowest))
+    {
+        player->GetSession()->SendNotification("%s", lowest->errorMessage.c_str());
+        CloseGossipMenuFor(player);
+        return false;
+    }
+
+    return true;
 }
-
-struct npc_restricted_skill : public ScriptedAI
-{
-    npc_restricted_skill(Creature* creature) : ScriptedAI(creature) {}
-
-    bool OnGossipHello(Player* player) override
-    {
-        ClearGossipMenuFor(player);
-
-        WorldSession* session = player->GetSession();
-
-        // Multi-function NPC: gate the menu with the lowest requirement so the
-        // player can open the menu if they qualify for ANY service.  Each
-        // individual action is then gated in OnGossipSelect.
-        if (CountServiceFlags(me) > 1)
-        {
-            // Blanket check (npc_flag = 0) blocks everything
-            if (!CheckNpcSkillRequirement(player, me, 0))
-                return true;
-
-            // Find the lowest skill requirement across all this NPC's flags.
-            // If the player can't even meet the easiest one, block entirely.
-            SkillRequirement const* lowest = FindLowestRequirement(me);
-            if (lowest && !MeetsRequirement(player, lowest))
-            {
-                player->GetSession()->SendNotification("%s", lowest->errorMessage.c_str());
-                CloseGossipMenuFor(player);
-                return true;
-            }
-
-            player->PrepareGossipMenu(me, me->GetCreatureTemplate()->GossipMenuId, true);
-            player->SendPreparedGossip(me);
-            return true;
-        }
-
-        // Single-function NPC: check the relevant flag and open the window directly
-        if (me->IsQuestGiver())
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_QUESTGIVER))
-                return true;
-            player->PrepareQuestMenu(me->GetGUID());
-            player->SendPreparedQuest(me->GetGUID());
-        }
-        else if (me->IsVendor())
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_VENDOR))
-                return true;
-            session->SendListInventory(me->GetGUID());
-        }
-        else if (me->IsTrainer())
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_TRAINER))
-                return true;
-            session->SendTrainerList(me);
-        }
-        else if (me->IsBanker())
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_BANKER))
-                return true;
-            session->SendShowBank(me->GetGUID());
-        }
-        else if (me->IsInnkeeper())
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_INNKEEPER))
-                return true;
-            player->PrepareGossipMenu(me, me->GetCreatureTemplate()->GossipMenuId, true);
-            player->SendPreparedGossip(me);
-        }
-        else if (me->IsAuctioner())
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_AUCTIONEER))
-                return true;
-            session->SendAuctionHello(me->GetGUID(), me);
-        }
-        else if (me->IsTaxi())
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_FLIGHTMASTER))
-                return true;
-            player->PrepareGossipMenu(me, me->GetCreatureTemplate()->GossipMenuId, true);
-            player->SendPreparedGossip(me);
-        }
-        else if (me->IsGuildMaster())
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_PETITIONER))
-                return true;
-            player->PrepareGossipMenu(me, me->GetCreatureTemplate()->GossipMenuId, true);
-            player->SendPreparedGossip(me);
-        }
-        else if (me->IsBattleMaster())
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_BATTLEMASTER))
-                return true;
-            player->PrepareGossipMenu(me, me->GetCreatureTemplate()->GossipMenuId, true);
-            player->SendPreparedGossip(me);
-        }
-        else if (me->IsTabardDesigner())
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_TABARDDESIGNER))
-                return true;
-            session->SendTabardVendorActivate(me->GetGUID());
-        }
-        else if (me->IsSpiritHealer())
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_SPIRITHEALER))
-                return true;
-            player->PrepareGossipMenu(me, me->GetCreatureTemplate()->GossipMenuId, true);
-            player->SendPreparedGossip(me);
-        }
-        else if (me->IsArmorer())
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_REPAIR))
-                return true;
-            player->PrepareGossipMenu(me, me->GetCreatureTemplate()->GossipMenuId, true);
-            player->SendPreparedGossip(me);
-        }
-        else if (me->HasNpcFlag(UNIT_NPC_FLAG_STABLEMASTER))
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_STABLEMASTER))
-                return true;
-            session->SendStablePet(me->GetGUID());
-        }
-        else if (me->HasNpcFlag(UNIT_NPC_FLAG_GUILD_BANKER))
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_GUILD_BANKER))
-                return true;
-            player->PrepareGossipMenu(me, me->GetCreatureTemplate()->GossipMenuId, true);
-            player->SendPreparedGossip(me);
-        }
-        else if (me->HasNpcFlag(UNIT_NPC_FLAG_MAILBOX))
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_MAILBOX))
-                return true;
-            session->SendShowMailBox(me->GetGUID());
-        }
-        else if (me->HasNpcFlag(UNIT_NPC_FLAG_GOSSIP))
-        {
-            if (!CheckNpcSkillRequirement(player, me, UNIT_NPC_FLAG_GOSSIP))
-                return true;
-            player->PrepareGossipMenu(me, me->GetCreatureTemplate()->GossipMenuId, true);
-            player->SendPreparedGossip(me);
-        }
-        else
-        {
-            // No recognized flags: check the catch-all requirement
-            if (!CheckNpcSkillRequirement(player, me, 0))
-                return true;
-            player->PrepareGossipMenu(me, me->GetCreatureTemplate()->GossipMenuId, true);
-            player->SendPreparedGossip(me);
-        }
-
-        return true;
-    }
-
-    bool OnGossipSelect(Player* player, uint32 menuId, uint32 gossipListId) override
-    {
-        GossipMenuItem const* item = player->PlayerTalkClass->GetGossipMenu().GetItem(gossipListId);
-        if (!item)
-        {
-            CloseGossipMenuFor(player);
-            return true;
-        }
-
-        // OptionType holds the Gossip_Option enum value for DB-defined items
-        uint32 npcFlag = GossipOptionToNpcFlag(item->OptionType);
-        if (npcFlag != 0)
-        {
-            // Flight Masters: skip skill checks for gossip and flight options,
-            // but still gate other services like quest givers.
-            if (me->IsTaxi() && (npcFlag == UNIT_NPC_FLAG_FLIGHTMASTER || npcFlag == UNIT_NPC_FLAG_GOSSIP))
-            {
-                player->OnGossipSelect(me, gossipListId, menuId);
-                return true;
-            }
-
-            if (!CheckNpcSkillRequirement(player, me, npcFlag))
-            {
-                ClearGossipMenuFor(player);
-                return true;
-            }
-        }
-
-        // Let the core handle the action normally
-        player->OnGossipSelect(me, gossipListId, menuId);
-        return true;
-    }
-};
 
 class npc_restricted_skill_loader : public WorldScript
 {
@@ -418,6 +230,5 @@ public:
 
 void AddSC_npc_restricted_skill()
 {
-    RegisterCreatureAI(npc_restricted_skill);
     new npc_restricted_skill_loader();
 }

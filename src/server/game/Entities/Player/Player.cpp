@@ -3232,12 +3232,7 @@ bool Player::AddSpell(uint32 spellId, bool active, bool learning, bool dependent
     // update used talent points count
     SetUsedTalentCount(GetUsedTalentCount() + talentCost);
 
-    // update free primary prof.points (if any, can be none in case GM .learn prof. learning)
-    if (uint32 freeProfs = GetFreePrimaryProfessionPoints())
-    {
-        if (spellInfo->IsPrimaryProfessionFirstRank())
-            SetFreePrimaryProfessions(freeProfs-1);
-    }
+    // Unlimited professions: profession points are no longer decremented
 
     SkillLineAbilityMapBounds skill_bounds = sSpellMgr->GetSkillLineAbilityMapBounds(spellId);
 

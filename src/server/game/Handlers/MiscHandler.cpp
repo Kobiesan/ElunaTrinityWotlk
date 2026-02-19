@@ -52,6 +52,7 @@
 #include "WhoListStorage.h"
 #include "World.h"
 #include "WorldPacket.h"
+#include "../../scripts/Custom/npc_restricted_skill.h"
 #include <cstdarg>
 #include <zlib.h>
 
@@ -171,6 +172,25 @@ void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket& recvData)
         _player->PlayerTalkClass->SendCloseGossip();
         return;
     }
+
+    // Check NPC skill requirements for the selected gossip option
+    if (unit)
+    {
+        GossipMenuItem const* gossipItem = _player->PlayerTalkClass->GetGossipMenu().GetItem(gossipListId);
+        if (gossipItem)
+        {
+            uint32 npcFlag = GossipOptionToNpcFlag(gossipItem->OptionType);
+            if (npcFlag != 0)
+            {
+                // Flight Masters: skip skill checks for gossip and flight options,
+                // but still gate other services like quest givers.
+                bool skipCheck = unit->IsTaxi() && (npcFlag == UNIT_NPC_FLAG_FLIGHTMASTER || npcFlag == UNIT_NPC_FLAG_GOSSIP);
+                if (!skipCheck && !CheckNpcSkillRequirement(_player, unit, npcFlag))
+                    return;
+            }
+        }
+    }
+
     if (!code.empty())
     {
         if (unit)
