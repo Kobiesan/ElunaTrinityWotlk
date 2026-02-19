@@ -42,37 +42,37 @@ static std::vector<SkillRequirement> const* FindRequirements(uint32 entry, uint3
     return nullptr;
 }
 
+static constexpr uint32 NPC_SERVICE_FLAGS[] =
+{
+    UNIT_NPC_FLAG_GOSSIP,
+    UNIT_NPC_FLAG_QUESTGIVER,
+    UNIT_NPC_FLAG_TRAINER,
+    UNIT_NPC_FLAG_VENDOR,
+    UNIT_NPC_FLAG_REPAIR,
+    UNIT_NPC_FLAG_INNKEEPER,
+    UNIT_NPC_FLAG_BANKER,
+    UNIT_NPC_FLAG_PETITIONER,
+    UNIT_NPC_FLAG_TABARDDESIGNER,
+    UNIT_NPC_FLAG_FLIGHTMASTER,
+    UNIT_NPC_FLAG_BATTLEMASTER,
+    UNIT_NPC_FLAG_SPIRITHEALER,
+    UNIT_NPC_FLAG_AUCTIONEER,
+    UNIT_NPC_FLAG_STABLEMASTER,
+    UNIT_NPC_FLAG_GUILD_BANKER,
+    UNIT_NPC_FLAG_MAILBOX
+};
+
 // Returns the lowest skill requirement among all flags this creature has.
 // If the player meets this, they qualify for at least one service.
 // With OR-logic, a group's "effective level" is the minimum among its alternatives.
 static uint32 FindLowestRequirementLevel(Creature* creature)
 {
-    static constexpr uint32 checkedFlags[] =
-    {
-        UNIT_NPC_FLAG_GOSSIP,
-        UNIT_NPC_FLAG_QUESTGIVER,
-        UNIT_NPC_FLAG_TRAINER,
-        UNIT_NPC_FLAG_VENDOR,
-        UNIT_NPC_FLAG_REPAIR,
-        UNIT_NPC_FLAG_INNKEEPER,
-        UNIT_NPC_FLAG_BANKER,
-        UNIT_NPC_FLAG_PETITIONER,
-        UNIT_NPC_FLAG_TABARDDESIGNER,
-        UNIT_NPC_FLAG_FLIGHTMASTER,
-        UNIT_NPC_FLAG_BATTLEMASTER,
-        UNIT_NPC_FLAG_SPIRITHEALER,
-        UNIT_NPC_FLAG_AUCTIONEER,
-        UNIT_NPC_FLAG_STABLEMASTER,
-        UNIT_NPC_FLAG_GUILD_BANKER,
-        UNIT_NPC_FLAG_MAILBOX
-    };
-
     bool isTaxi = creature->IsTaxi();
     uint32 entry = creature->GetEntry();
     uint32 lowestLevel = UINT32_MAX;
     bool found = false;
 
-    for (uint32 flag : checkedFlags)
+    for (uint32 flag : NPC_SERVICE_FLAGS)
     {
         if (!creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
             continue;
@@ -204,21 +204,11 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
     {
         // Check if the player meets ANY requirement across all flags
         // by re-checking each flag's requirements with OR logic
-        static constexpr uint32 checkedFlags[] =
-        {
-            UNIT_NPC_FLAG_GOSSIP, UNIT_NPC_FLAG_QUESTGIVER, UNIT_NPC_FLAG_TRAINER,
-            UNIT_NPC_FLAG_VENDOR, UNIT_NPC_FLAG_REPAIR, UNIT_NPC_FLAG_INNKEEPER,
-            UNIT_NPC_FLAG_BANKER, UNIT_NPC_FLAG_PETITIONER, UNIT_NPC_FLAG_TABARDDESIGNER,
-            UNIT_NPC_FLAG_FLIGHTMASTER, UNIT_NPC_FLAG_BATTLEMASTER, UNIT_NPC_FLAG_SPIRITHEALER,
-            UNIT_NPC_FLAG_AUCTIONEER, UNIT_NPC_FLAG_STABLEMASTER, UNIT_NPC_FLAG_GUILD_BANKER,
-            UNIT_NPC_FLAG_MAILBOX
-        };
-
         bool isTaxi = creature->IsTaxi();
         bool meetsAny = false;
         std::string errorMessage;
 
-        for (uint32 flag : checkedFlags)
+        for (uint32 flag : NPC_SERVICE_FLAGS)
         {
             if (!creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
                 continue;
