@@ -152,27 +152,10 @@ static char const* GetSkillName(uint32 skillId)
     return "Unknown";
 }
 
-// Determines the most meaningful service flag from a creature's NPC flags
-static uint32 GetPrimaryServiceFlag(Creature* creature)
-{
-    if (!creature)
-        return 0;
-
-    for (uint32 flag : NPC_SERVICE_FLAGS)
-    {
-        // Skip GOSSIP and QUESTGIVER as they are too generic for service identification
-        if (flag == UNIT_NPC_FLAG_GOSSIP || flag == UNIT_NPC_FLAG_QUESTGIVER)
-            continue;
-        if (creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
-            return flag;
-    }
-    return 0;
-}
-
 // Builds a combined message like:
 //   "You need 75 Dwarvish, 75 Gnomish, or 75 Orcish to speak with this trainer."
 //   "You need 75 Dwarvish to repair items at this armorer."
-static void SendRequirementErrors(Player* player, std::vector<SkillRequirement> const* reqs, uint32 npcFlag = 0, Creature* creature = nullptr)
+static void SendRequirementErrors(Player* player, std::vector<SkillRequirement> const* reqs, uint32 npcFlag = 0)
 {
     if (!reqs || reqs->empty())
         return;
@@ -202,13 +185,8 @@ static void SendRequirementErrors(Player* player, std::vector<SkillRequirement> 
     }
     else
     {
-        // When npcFlag is generic (0 or GOSSIP), try to determine a better name
-        uint32 displayFlag = npcFlag;
-        if (creature && (displayFlag == 0 || displayFlag == UNIT_NPC_FLAG_GOSSIP))
-            displayFlag = GetPrimaryServiceFlag(creature);
-
         message += " to speak with this ";
-        message += NpcFlagToServiceName(displayFlag);
+        message += NpcFlagToServiceName(npcFlag);
         message += ".";
     }
 
@@ -227,7 +205,7 @@ bool CheckNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag
 
     if (!MeetsRequirements(player, reqs))
     {
-        SendRequirementErrors(player, reqs, npcFlag, creature);
+        SendRequirementErrors(player, reqs, npcFlag);
         CloseGossipMenuFor(player);
         return false;
     }
@@ -291,8 +269,8 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
         // by re-checking each flag's requirements with OR logic
         bool isTaxi = creature->IsTaxi();
         bool meetsAny = false;
-        std::vector<SkillRequirement> const* firstFailedReqs = nullptr;
-        uint32 firstFailedFlag = 0;
+        std::vector<SkillRequirement> const* lowestReqs = nullptr;
+        uint32 lowestMinLevel = UINT32_MAX;
 
         for (uint32 flag : NPC_SERVICE_FLAGS)
         {
@@ -308,38 +286,27 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
             if (!reqs)
                 continue;
 
-            if (!firstFailedReqs)
-            {
-                firstFailedReqs = reqs;
-                firstFailedFlag = flag;
-            }
-
             if (MeetsRequirements(player, reqs))
             {
                 meetsAny = true;
                 break;
             }
-        }
 
-        if (!meetsAny)
-        {
-            // Prefer the primary service flag's requirements for the error message
-            // so the skill level shown matches the service name displayed
-            uint32 primaryFlag = GetPrimaryServiceFlag(creature);
-            std::vector<SkillRequirement> const* displayReqs = firstFailedReqs;
-            uint32 displayFlag = firstFailedFlag;
-
-            if (primaryFlag != 0)
+            // Track the requirements with the lowest minimum skill level
+            for (SkillRequirement const& req : *reqs)
             {
-                std::vector<SkillRequirement> const* primaryReqs = FindRequirements(creature->GetEntry(), primaryFlag);
-                if (primaryReqs)
+                if (req.skillLevel < lowestMinLevel)
                 {
-                    displayReqs = primaryReqs;
-                    displayFlag = primaryFlag;
+                    lowestMinLevel = req.skillLevel;
+                    lowestReqs = reqs;
                 }
             }
+        }
 
-            SendRequirementErrors(player, displayReqs, displayFlag, creature);
+        if (!meetsAny && lowestReqs)
+        {
+            // Display "character" since the NPC may serve multiple roles
+            SendRequirementErrors(player, lowestReqs);
             CloseGossipMenuFor(player);
             return false;
         }
