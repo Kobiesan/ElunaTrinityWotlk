@@ -62,6 +62,19 @@ static constexpr uint32 NPC_SERVICE_FLAGS[] =
     UNIT_NPC_FLAG_MAILBOX
 };
 
+// Returns true if creature has at least one service flag besides gossip and quest giver.
+static bool HasNonGossipServiceFlag(Creature* creature)
+{
+    for (uint32 flag : NPC_SERVICE_FLAGS)
+    {
+        if (flag == UNIT_NPC_FLAG_GOSSIP || flag == UNIT_NPC_FLAG_QUESTGIVER)
+            continue;
+        if (creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
+            return true;
+    }
+    return false;
+}
+
 // Returns the lowest skill requirement among all flags this creature has.
 // If the player meets this, they qualify for at least one service.
 // With OR-logic, a group's "effective level" is the minimum among its alternatives.
@@ -78,6 +91,9 @@ static uint32 FindLowestRequirementLevel(Creature* creature)
             continue;
 
         if (flag == UNIT_NPC_FLAG_QUESTGIVER)
+            continue;
+
+        if (flag == UNIT_NPC_FLAG_GOSSIP && HasNonGossipServiceFlag(creature))
             continue;
 
         if (isTaxi && (flag == UNIT_NPC_FLAG_FLIGHTMASTER ||
@@ -281,6 +297,9 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
                 continue;
 
             if (flag == UNIT_NPC_FLAG_QUESTGIVER)
+                continue;
+
+            if (flag == UNIT_NPC_FLAG_GOSSIP && HasNonGossipServiceFlag(creature))
                 continue;
 
             if (isTaxi && (flag == UNIT_NPC_FLAG_FLIGHTMASTER ||
