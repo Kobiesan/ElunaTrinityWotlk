@@ -77,9 +77,7 @@ static uint32 FindLowestRequirementLevel(Creature* creature)
         if (!creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
             continue;
 
-        if (flag == UNIT_NPC_FLAG_QUESTGIVER ||
-            flag == UNIT_NPC_FLAG_PETITIONER ||
-            flag == UNIT_NPC_FLAG_TABARDDESIGNER)
+        if (flag == UNIT_NPC_FLAG_QUESTGIVER)
             continue;
 
         if (isTaxi && (flag == UNIT_NPC_FLAG_FLIGHTMASTER ||
@@ -282,9 +280,7 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
             if (!creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
                 continue;
 
-            if (flag == UNIT_NPC_FLAG_QUESTGIVER ||
-                flag == UNIT_NPC_FLAG_PETITIONER ||
-                flag == UNIT_NPC_FLAG_TABARDDESIGNER)
+            if (flag == UNIT_NPC_FLAG_QUESTGIVER)
                 continue;
 
             if (isTaxi && (flag == UNIT_NPC_FLAG_FLIGHTMASTER ||
