@@ -144,6 +144,7 @@ SELECT
     CASE WHEN (ct.npcflag & 0x00020000) <> 0 THEN 'Y' ELSE '-' END AS expect_banker,
     CASE WHEN (ct.npcflag & 0x00040000) <> 0 THEN 'Y' ELSE '-' END AS expect_guild,
     CASE WHEN (ct.npcflag & 0x00080000) <> 0 THEN 'Y' ELSE '-' END AS expect_tabard,
+    CASE WHEN (ct.npcflag & 0x00200000) <> 0 THEN 'Y' ELSE '-' END AS expect_auctioneer,
     CASE WHEN (ct.npcflag & 0x00400000) <> 0 THEN 'Y' ELSE '-' END AS expect_stable,
     GROUP_CONCAT(nsr.npc_flag ORDER BY nsr.npc_flag) AS actual_flags
 FROM creature_template ct
@@ -151,7 +152,7 @@ LEFT JOIN npc_skill_requirements nsr ON nsr.entry = ct.entry AND nsr.skill_id = 
 WHERE ct.faction = @faction_id
   AND (ct.subname IS NULL OR ct.subname NOT LIKE '%Instructor%')
   AND (ct.npcflag & (0x00000001 | 0x00000002 | 0x00000010 | 0x00000080 | 0x00001000 |
-                     0x00010000 | 0x00020000 | 0x00040000 | 0x00080000 | 0x00400000)) <> 0
+                     0x00010000 | 0x00020000 | 0x00040000 | 0x00080000 | 0x00200000 | 0x00400000)) <> 0
 GROUP BY ct.entry
 ORDER BY ct.entry;
 
