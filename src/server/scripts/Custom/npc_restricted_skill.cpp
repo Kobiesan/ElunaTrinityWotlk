@@ -200,9 +200,9 @@ static void SendRequirementErrors(Player* player, std::vector<SkillRequirement> 
     }
     else
     {
-        // When npcFlag is generic (0 or GOSSIP), try to determine a better name
+        // When npcFlag is unset (0), try to determine a better name
         uint32 displayFlag = npcFlag;
-        if (creature && (displayFlag == 0 || displayFlag == UNIT_NPC_FLAG_GOSSIP))
+        if (creature && displayFlag == 0)
             displayFlag = GetPrimaryServiceFlag(creature);
 
         message += " to speak with this ";
@@ -321,7 +321,40 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
 
         if (!meetsAny)
         {
-            SendRequirementErrors(player, firstFailedReqs, firstFailedFlag, creature);
+            std::vector<SkillRequirement> const* displayReqs = firstFailedReqs;
+            uint32 displayFlag = firstFailedFlag;
+
+            // Count specific service flags (excluding generic GOSSIP and QUESTGIVER)
+            // to determine if the NPC shows a gossip menu as a gateway.
+            uint32 specificServiceCount = 0;
+            for (uint32 flag : NPC_SERVICE_FLAGS)
+            {
+                if (flag == UNIT_NPC_FLAG_GOSSIP || flag == UNIT_NPC_FLAG_QUESTGIVER)
+                    continue;
+                if (creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
+                    ++specificServiceCount;
+            }
+
+            // When the NPC has a single specific service (no gossip menu),
+            // use the primary service's requirements so the skill level
+            // matches the service name displayed.
+            // When the NPC shows a gossip menu (multiple specific services),
+            // keep the gossip-level error since that's the first barrier.
+            if (specificServiceCount < 2)
+            {
+                uint32 primaryFlag = GetPrimaryServiceFlag(creature);
+                if (primaryFlag != 0)
+                {
+                    std::vector<SkillRequirement> const* primaryReqs = FindRequirements(creature->GetEntry(), primaryFlag);
+                    if (primaryReqs)
+                    {
+                        displayReqs = primaryReqs;
+                        displayFlag = primaryFlag;
+                    }
+                }
+            }
+
+            SendRequirementErrors(player, displayReqs, displayFlag, creature);
             CloseGossipMenuFor(player);
             return false;
         }
