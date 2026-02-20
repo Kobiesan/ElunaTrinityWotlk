@@ -271,6 +271,7 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
         bool meetsAny = false;
         std::vector<SkillRequirement> const* lowestReqs = nullptr;
         uint32 lowestMinLevel = UINT32_MAX;
+        uint32 lowestFlag = 0;
 
         for (uint32 flag : NPC_SERVICE_FLAGS)
         {
@@ -299,14 +300,14 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
                 {
                     lowestMinLevel = req.skillLevel;
                     lowestReqs = reqs;
+                    lowestFlag = flag;
                 }
             }
         }
 
         if (!meetsAny && lowestReqs)
         {
-            // Display "character" since the NPC may serve multiple roles
-            SendRequirementErrors(player, lowestReqs);
+            SendRequirementErrors(player, lowestReqs, lowestFlag);
             CloseGossipMenuFor(player);
             return false;
         }
