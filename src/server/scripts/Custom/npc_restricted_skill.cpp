@@ -77,9 +77,13 @@ static uint32 FindLowestRequirementLevel(Creature* creature)
         if (!creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
             continue;
 
+        if (flag == UNIT_NPC_FLAG_QUESTGIVER ||
+            flag == UNIT_NPC_FLAG_PETITIONER ||
+            flag == UNIT_NPC_FLAG_TABARDDESIGNER)
+            continue;
+
         if (isTaxi && (flag == UNIT_NPC_FLAG_FLIGHTMASTER ||
-            flag == UNIT_NPC_FLAG_GOSSIP ||
-            flag == UNIT_NPC_FLAG_QUESTGIVER))
+            flag == UNIT_NPC_FLAG_GOSSIP))
             continue;
 
         std::vector<SkillRequirement> const* reqs = FindRequirements(entry, flag);
@@ -278,9 +282,13 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
             if (!creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
                 continue;
 
+            if (flag == UNIT_NPC_FLAG_QUESTGIVER ||
+                flag == UNIT_NPC_FLAG_PETITIONER ||
+                flag == UNIT_NPC_FLAG_TABARDDESIGNER)
+                continue;
+
             if (isTaxi && (flag == UNIT_NPC_FLAG_FLIGHTMASTER ||
-                flag == UNIT_NPC_FLAG_GOSSIP ||
-                flag == UNIT_NPC_FLAG_QUESTGIVER))
+                flag == UNIT_NPC_FLAG_GOSSIP))
                 continue;
 
             std::vector<SkillRequirement> const* reqs = FindRequirements(creature->GetEntry(), flag);
