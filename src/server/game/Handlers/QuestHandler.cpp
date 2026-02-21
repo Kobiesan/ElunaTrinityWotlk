@@ -91,8 +91,8 @@ void WorldSession::HandleQuestgiverHelloOpcode(WorldPacket& recvData)
         return;
     }
 
-    // Check NPC skill requirement before showing quest menu
-    if (!CheckNpcSkillRequirement(_player, creature, UNIT_NPC_FLAG_QUESTGIVER))
+    // Check NPC skill requirement before showing quest menu (silent – no error for quests)
+    if (!MeetsNpcSkillRequirement(_player, creature, UNIT_NPC_FLAG_QUESTGIVER))
         return;
 
     // remove fake death
@@ -147,11 +147,11 @@ void WorldSession::HandleQuestgiverAcceptQuestOpcode(WorldPacket& recvData)
         return;
     }
 
-    // Check NPC skill requirement before accepting quest
+    // Check NPC skill requirement before accepting quest (silent – no error for quests)
     if (object->GetTypeId() == TYPEID_UNIT)
     {
         Creature* creature = object->ToCreature();
-        if (!CheckNpcSkillRequirement(_player, creature, UNIT_NPC_FLAG_QUESTGIVER))
+        if (!MeetsNpcSkillRequirement(_player, creature, UNIT_NPC_FLAG_QUESTGIVER))
         {
             CLOSE_GOSSIP_CLEAR_SHARING_INFO();
             return;
@@ -262,11 +262,11 @@ void WorldSession::HandleQuestgiverQueryQuestOpcode(WorldPacket& recvData)
         return;
     }
 
-    // Check NPC skill requirement for quest givers
+    // Check NPC skill requirement for quest givers (silent – no error for quests)
     if (object->GetTypeId() == TYPEID_UNIT)
     {
         Creature* creature = object->ToCreature();
-        if (!CheckNpcSkillRequirement(_player, creature, UNIT_NPC_FLAG_QUESTGIVER))
+        if (!MeetsNpcSkillRequirement(_player, creature, UNIT_NPC_FLAG_QUESTGIVER))
             return;
     }
 

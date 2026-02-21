@@ -320,13 +320,17 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
             }
 
             // Track the requirements with the lowest minimum skill level
-            for (SkillRequirement const& req : *reqs)
+            // (skip quest giver – we never show errors for quest requirements)
+            if (flag != UNIT_NPC_FLAG_QUESTGIVER)
             {
-                if (req.skillLevel < lowestMinLevel)
+                for (SkillRequirement const& req : *reqs)
                 {
-                    lowestMinLevel = req.skillLevel;
-                    lowestReqs = reqs;
-                    lowestFlag = flag;
+                    if (req.skillLevel < lowestMinLevel)
+                    {
+                        lowestMinLevel = req.skillLevel;
+                        lowestReqs = reqs;
+                        lowestFlag = flag;
+                    }
                 }
             }
         }
