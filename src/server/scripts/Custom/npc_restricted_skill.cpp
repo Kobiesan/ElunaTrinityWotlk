@@ -222,12 +222,6 @@ bool CheckNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag
     if (!player || !creature)
         return true;
 
-    // Skill requirements only apply to NPCs with the gossip flag.
-    // NPCs without gossip provide direct services and don't require
-    // the player to "speak" with them first.
-    if (!creature->HasNpcFlag(UNIT_NPC_FLAG_GOSSIP))
-        return true;
-
     std::vector<SkillRequirement> const* reqs = FindRequirements(creature->GetEntry(), npcFlag);
     if (!reqs)
         return true;
@@ -245,9 +239,6 @@ bool CheckNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag
 bool MeetsNpcSkillRequirement(Player* player, Creature* creature, uint32 npcFlag)
 {
     if (!player || !creature)
-        return true;
-
-    if (!creature->HasNpcFlag(UNIT_NPC_FLAG_GOSSIP))
         return true;
 
     std::vector<SkillRequirement> const* reqs = FindRequirements(creature->GetEntry(), npcFlag);
