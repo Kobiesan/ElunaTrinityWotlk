@@ -62,22 +62,17 @@ static constexpr uint32 NPC_SERVICE_FLAGS[] =
     UNIT_NPC_FLAG_MAILBOX
 };
 
-// Returns true if creature has exactly one service flag besides gossip and quest giver.
-// When there is a single service flag the client bypasses the gossip menu and opens
-// the service window directly, so the gossip skill requirement can be skipped.
-// When there are multiple service flags (e.g. guild master + tabard designer) the
-// gossip menu IS shown, so its requirement must still be enforced.
+// Returns true if creature has at least one service flag besides gossip and quest giver.
 static bool HasNonGossipServiceFlag(Creature* creature)
 {
-    int count = 0;
     for (uint32 flag : NPC_SERVICE_FLAGS)
     {
         if (flag == UNIT_NPC_FLAG_GOSSIP || flag == UNIT_NPC_FLAG_QUESTGIVER)
             continue;
         if (creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
-            ++count;
+            return true;
     }
-    return count == 1;
+    return false;
 }
 
 // Returns the lowest skill requirement among all flags this creature has.
