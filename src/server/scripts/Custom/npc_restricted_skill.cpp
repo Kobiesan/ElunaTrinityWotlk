@@ -95,9 +95,6 @@ static uint32 FindLowestRequirementLevel(Creature* creature)
         if (!creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
             continue;
 
-        if (flag == UNIT_NPC_FLAG_QUESTGIVER)
-            continue;
-
         if (flag == UNIT_NPC_FLAG_GOSSIP && HasNonGossipServiceFlag(creature))
             continue;
 
@@ -301,9 +298,6 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
             if (!creature->HasNpcFlag(static_cast<NPCFlags>(flag)))
                 continue;
 
-            if (flag == UNIT_NPC_FLAG_QUESTGIVER)
-                continue;
-
             if (flag == UNIT_NPC_FLAG_GOSSIP && HasNonGossipServiceFlag(creature))
                 continue;
 
@@ -313,7 +307,11 @@ bool CheckNpcSkillRequirementForGossipHello(Player* player, Creature* creature)
 
             std::vector<SkillRequirement> const* reqs = FindRequirements(creature->GetEntry(), flag);
             if (!reqs)
-                continue;
+            {
+                // No skill requirement for this flag means unrestricted access
+                meetsAny = true;
+                break;
+            }
 
             if (MeetsRequirements(player, reqs))
             {
