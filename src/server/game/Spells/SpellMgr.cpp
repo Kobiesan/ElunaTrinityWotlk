@@ -5086,3 +5086,55 @@ void SpellMgr::LoadSpellInfoImmunities()
 
     TC_LOG_INFO("server.loading", ">> Loaded SpellInfo immunity infos in {} ms", GetMSTimeDiffToNow(oldMSTime));
 }
+
+void SpellMgr::LoadItemQualityFamilies()
+{
+    uint32 oldMSTime = getMSTime();
+
+    mItemQualityFamilyMap.clear();
+    mItemQualityFamilyMembers.clear();
+
+    QueryResult result = WorldDatabase.Query("SELECT family_id, item_id FROM item_quality_family");
+    if (!result)
+    {
+        TC_LOG_INFO("server.loading", ">> Loaded 0 item quality families. DB table `item_quality_family` is empty.");
+        return;
+    }
+
+    uint32 count = 0;
+    do
+    {
+        Field* fields = result->Fetch();
+
+        uint32 familyId = fields[0].GetUInt32();
+        uint32 itemId   = fields[1].GetUInt32();
+
+        if (!sObjectMgr->GetItemTemplate(itemId))
+        {
+            TC_LOG_ERROR("sql.sql", "Item {} listed in `item_quality_family` does not exist in `item_template`, skipping.", itemId);
+            continue;
+        }
+
+        mItemQualityFamilyMap[itemId]               = familyId;
+        mItemQualityFamilyMembers[familyId].push_back(itemId);
+        ++count;
+    } while (result->NextRow());
+
+    TC_LOG_INFO("server.loading", ">> Loaded {} item quality family entries ({} families) in {} ms",
+        count,
+        (uint32)mItemQualityFamilyMembers.size(),
+        GetMSTimeDiffToNow(oldMSTime));
+}
+
+std::vector<uint32> const* SpellMgr::GetItemQualityFamily(uint32 itemId) const
+{
+    auto itr = mItemQualityFamilyMap.find(itemId);
+    if (itr == mItemQualityFamilyMap.end())
+        return nullptr;
+
+    auto familyItr = mItemQualityFamilyMembers.find(itr->second);
+    if (familyItr == mItemQualityFamilyMembers.end())
+        return nullptr;
+
+    return &familyItr->second;
+}

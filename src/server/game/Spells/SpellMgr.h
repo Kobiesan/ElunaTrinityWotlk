@@ -702,6 +702,9 @@ class TC_GAME_API SpellMgr
         void LoadSpellInfoSpellSpecificAndAuraState();
         void LoadSpellInfoDiminishing();
         void LoadSpellInfoImmunities();
+        void LoadItemQualityFamilies();
+
+        std::vector<uint32> const* GetItemQualityFamily(uint32 itemId) const;
 
     private:
         SpellDifficultySearcherMap mSpellDifficultySearcherMap;
@@ -731,6 +734,8 @@ class TC_GAME_API SpellMgr
         PetLevelupSpellMap         mPetLevelupSpellMap;
         PetDefaultSpellsMap        mPetDefaultSpellsMap;           // only spells not listed in related mPetLevelupSpellMap entry
         SpellInfoMap               mSpellInfoMap;
+        std::unordered_map<uint32, uint32>              mItemQualityFamilyMap;      // item_id -> family_id
+        std::unordered_map<uint32, std::vector<uint32>> mItemQualityFamilyMembers;  // family_id -> [item_ids]
 
     friend class UnitTestDataLoader;
 };

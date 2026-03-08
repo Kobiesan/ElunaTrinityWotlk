@@ -5103,6 +5103,22 @@ void Spell::TakeReagents()
         if (m_targets.GetItemTargetEntry() == itemid)
             m_targets.SetItemTarget(nullptr);
 
+        // If the player doesn't have the exact reagent, consume a quality family variant instead
+        if (!p_caster->HasItemCount(itemid, itemcount))
+        {
+            if (std::vector<uint32> const* family = sSpellMgr->GetItemQualityFamily(itemid))
+            {
+                for (uint32 variantId : *family)
+                {
+                    if (p_caster->HasItemCount(variantId, itemcount))
+                    {
+                        itemid = variantId;
+                        break;
+                    }
+                }
+            }
+        }
+
         p_caster->DestroyItemCount(itemid, itemcount, true);
     }
 }
@@ -6824,9 +6840,25 @@ SpellCastResult Spell::CheckItems(uint32* param1 /*= nullptr*/, uint32* param2 /
                 }
                 if (!player->HasItemCount(itemid, itemcount))
                 {
-                    if (param1)
-                        *param1 = itemid;
-                    return SPELL_FAILED_REAGENTS;
+                    // Check if a quality family variant satisfies the reagent requirement
+                    bool foundFamilyMatch = false;
+                    if (std::vector<uint32> const* family = sSpellMgr->GetItemQualityFamily(itemid))
+                    {
+                        for (uint32 variantId : *family)
+                        {
+                            if (player->HasItemCount(variantId, itemcount))
+                            {
+                                foundFamilyMatch = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!foundFamilyMatch)
+                    {
+                        if (param1)
+                            *param1 = itemid;
+                        return SPELL_FAILED_REAGENTS;
+                    }
                 }
             }
         }
