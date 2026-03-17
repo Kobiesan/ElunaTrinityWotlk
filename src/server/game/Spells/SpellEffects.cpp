@@ -1393,6 +1393,10 @@ void Spell::DoCreateItem(uint32 itemId)
 
     Player* player = unitTarget->ToPlayer();
 
+    // Use quality-specific override if TakeReagents detected a family variant was consumed
+    if (m_overrideCreateItemId)
+        itemId = m_overrideCreateItemId;
+
     uint32 newitemid = itemId;
     ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(newitemid);
     if (!pProto)
