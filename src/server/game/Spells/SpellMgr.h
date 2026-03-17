@@ -21,6 +21,7 @@
 // For static or at-server-startup loaded spell data
 
 #include "Define.h"
+#include "DBCEnums.h"
 #include "Duration.h"
 #include "IteratorPair.h"
 #include "SharedDefines.h"
@@ -31,6 +32,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <array>
 
 class SpellInfo;
 class Player;
@@ -706,7 +708,16 @@ class TC_GAME_API SpellMgr
         void LoadSpellQualityOutputs();
 
         std::vector<uint32> const* GetItemQualityFamily(uint32 itemId) const;
+        uint8  GetItemFamilyQuality(uint32 itemId) const;
+        bool   AreInSameFamily(uint32 itemId1, uint32 itemId2) const;
         uint32 GetSpellQualityOutput(uint32 spellId, uint8 quality) const;
+
+        // Per-player reagent quality preferences: set from addon messages, consumed by TakeReagents.
+        void   SetCraftPreference(uint64 playerGuid, uint32 spellId, uint8 reagentSlot, uint32 itemId);
+        uint32 GetCraftPreference(uint64 playerGuid, uint32 spellId, uint8 reagentSlot) const;
+        // Pass spellId = CLEAR_ALL_CRAFT_SPELLS to erase all spells for that player.
+        static constexpr uint32 CLEAR_ALL_CRAFT_SPELLS = 0;
+        void   ClearCraftPreferences(uint64 playerGuid, uint32 spellId);
 
     private:
         SpellDifficultySearcherMap mSpellDifficultySearcherMap;
@@ -736,10 +747,22 @@ class TC_GAME_API SpellMgr
         PetLevelupSpellMap         mPetLevelupSpellMap;
         PetDefaultSpellsMap        mPetDefaultSpellsMap;           // only spells not listed in related mPetLevelupSpellMap entry
         SpellInfoMap               mSpellInfoMap;
-        std::unordered_map<uint32, uint32>              mItemQualityFamilyMap;      // item_id -> family_id
-        std::unordered_map<uint32, std::vector<uint32>> mItemQualityFamilyMembers;  // family_id -> [item_ids]
+
+        // item_quality_family tables
+        struct ItemQualityFamilyEntry
+        {
+            uint32 familyId;
+            uint8  quality;  // explicit quality from item_quality_family.quality
+        };
+        std::unordered_map<uint32, ItemQualityFamilyEntry>           mItemQualityFamilyMap;      // item_id -> {family_id, quality}
+        std::unordered_map<uint32, std::vector<uint32>>              mItemQualityFamilyMembers;  // family_id -> [item_ids]
+        std::unordered_map<uint32, std::unordered_map<uint8, uint32>> mItemQualityFamilyByQuality; // family_id -> {quality -> item_id}
+
         // spell_id -> (quality -> output_item_id)
         std::unordered_map<uint32, std::unordered_map<uint8, uint32>> mSpellQualityOutputMap;
+
+        // Per-player reagent quality preferences: playerGuid -> spellId -> [preferredItemId per reagent slot]
+        std::unordered_map<uint64, std::unordered_map<uint32, std::array<uint32, MAX_SPELL_REAGENTS>>> mCraftPreferences;
 
     friend class UnitTestDataLoader;
 };

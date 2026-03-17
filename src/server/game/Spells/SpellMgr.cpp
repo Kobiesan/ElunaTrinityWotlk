@@ -5093,8 +5093,9 @@ void SpellMgr::LoadItemQualityFamilies()
 
     mItemQualityFamilyMap.clear();
     mItemQualityFamilyMembers.clear();
+    mItemQualityFamilyByQuality.clear();
 
-    QueryResult result = WorldDatabase.Query("SELECT family_id, item_id FROM item_quality_family");
+    QueryResult result = WorldDatabase.Query("SELECT family_id, item_id, quality FROM item_quality_family");
     if (!result)
     {
         TC_LOG_INFO("server.loading", ">> Loaded 0 item quality families. DB table `item_quality_family` is empty.");
@@ -5108,6 +5109,7 @@ void SpellMgr::LoadItemQualityFamilies()
 
         uint32 familyId = fields[0].GetUInt32();
         uint32 itemId   = fields[1].GetUInt32();
+        uint8  quality  = fields[2].GetUInt8();
 
         if (!sObjectMgr->GetItemTemplate(itemId))
         {
@@ -5115,8 +5117,15 @@ void SpellMgr::LoadItemQualityFamilies()
             continue;
         }
 
-        mItemQualityFamilyMap[itemId]               = familyId;
+        mItemQualityFamilyMap[itemId]               = { familyId, quality };
         mItemQualityFamilyMembers[familyId].push_back(itemId);
+
+        // Warn if two items in the same family share the same quality tier
+        auto& byQuality = mItemQualityFamilyByQuality[familyId];
+        if (auto existing = byQuality.find(quality); existing != byQuality.end())
+            TC_LOG_ERROR("sql.sql", "Items {} and {} in `item_quality_family` family {} both have quality {}, the second entry will override the first.",
+                existing->second, itemId, familyId, uint32(quality));
+        byQuality[quality] = itemId;
         ++count;
     } while (result->NextRow());
 
@@ -5132,11 +5141,66 @@ std::vector<uint32> const* SpellMgr::GetItemQualityFamily(uint32 itemId) const
     if (itr == mItemQualityFamilyMap.end())
         return nullptr;
 
-    auto familyItr = mItemQualityFamilyMembers.find(itr->second);
+    auto familyItr = mItemQualityFamilyMembers.find(itr->second.familyId);
     if (familyItr == mItemQualityFamilyMembers.end())
         return nullptr;
 
     return &familyItr->second;
+}
+
+uint8 SpellMgr::GetItemFamilyQuality(uint32 itemId) const
+{
+    auto itr = mItemQualityFamilyMap.find(itemId);
+    if (itr == mItemQualityFamilyMap.end())
+        return 0;
+
+    return itr->second.quality;
+}
+
+bool SpellMgr::AreInSameFamily(uint32 itemId1, uint32 itemId2) const
+{
+    auto itr1 = mItemQualityFamilyMap.find(itemId1);
+    auto itr2 = mItemQualityFamilyMap.find(itemId2);
+    if (itr1 == mItemQualityFamilyMap.end() || itr2 == mItemQualityFamilyMap.end())
+        return false;
+
+    return itr1->second.familyId == itr2->second.familyId;
+}
+
+void SpellMgr::SetCraftPreference(uint64 playerGuid, uint32 spellId, uint8 reagentSlot, uint32 itemId)
+{
+    if (reagentSlot >= MAX_SPELL_REAGENTS)
+        return;
+
+    mCraftPreferences[playerGuid][spellId][reagentSlot] = itemId;
+}
+
+uint32 SpellMgr::GetCraftPreference(uint64 playerGuid, uint32 spellId, uint8 reagentSlot) const
+{
+    if (reagentSlot >= MAX_SPELL_REAGENTS)
+        return 0;
+
+    auto playerItr = mCraftPreferences.find(playerGuid);
+    if (playerItr == mCraftPreferences.end())
+        return 0;
+
+    auto spellItr = playerItr->second.find(spellId);
+    if (spellItr == playerItr->second.end())
+        return 0;
+
+    return spellItr->second[reagentSlot];
+}
+
+void SpellMgr::ClearCraftPreferences(uint64 playerGuid, uint32 spellId)
+{
+    auto playerItr = mCraftPreferences.find(playerGuid);
+    if (playerItr == mCraftPreferences.end())
+        return;
+
+    if (spellId != CLEAR_ALL_CRAFT_SPELLS)
+        playerItr->second.erase(spellId);
+    else
+        mCraftPreferences.erase(playerItr);
 }
 
 void SpellMgr::LoadSpellQualityOutputs()

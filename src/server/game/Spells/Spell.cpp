@@ -5106,17 +5106,26 @@ void Spell::TakeReagents()
 
         uint32 originalItemId = itemid;
 
-        // If the player doesn't have the exact reagent, consume a quality family variant instead
-        itemid = FindAvailableReagentVariant(p_caster, itemid, itemcount);
+        // Check if the player has expressed a quality preference for this reagent slot
+        uint32 preferredId = sSpellMgr->GetCraftPreference(p_caster->GetGUID().GetRawValue(), m_spellInfo->Id, static_cast<uint8>(x));
+        if (preferredId && preferredId != itemid
+            && p_caster->HasItemCount(preferredId, itemcount)
+            && sSpellMgr->AreInSameFamily(itemid, preferredId))
+        {
+            itemid = preferredId;
+        }
 
-        // If a quality variant was substituted, determine the quality-specific output item
+        // Fall back to any available family variant if the chosen item isn't present
+        if (!p_caster->HasItemCount(itemid, itemcount))
+            itemid = FindAvailableReagentVariant(p_caster, itemid, itemcount);
+
+        // If a quality variant was substituted, determine the quality-specific output item.
+        // Use the explicit quality stored in item_quality_family rather than item_template.Quality.
         if (itemid != originalItemId)
         {
-            if (ItemTemplate const* proto = sObjectMgr->GetItemTemplate(itemid))
-            {
-                if (uint32 qualityOutput = sSpellMgr->GetSpellQualityOutput(m_spellInfo->Id, static_cast<uint8>(proto->Quality)))
-                    m_overrideCreateItemId = qualityOutput;
-            }
+            uint8 reagentQuality = sSpellMgr->GetItemFamilyQuality(itemid);
+            if (uint32 qualityOutput = sSpellMgr->GetSpellQualityOutput(m_spellInfo->Id, reagentQuality))
+                m_overrideCreateItemId = qualityOutput;
         }
 
         p_caster->DestroyItemCount(itemid, itemcount, true);

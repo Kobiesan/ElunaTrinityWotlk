@@ -1,24 +1,19 @@
--- QualityCraft.lua (WoW 3.3.5 client-side addon)
+-- QualityCraft.lua (WoW 3.3.5a client-side addon)
 --
--- Receives quality-family and quality-output data from the server (via the
--- QualityCraft Eluna script) and adds a small label to the TradeSkill frame
--- showing which quality item will actually be created based on the reagents
--- currently in the player's inventory.
+-- Adds a quality-tier dropdown to every reagent icon in the TradeSkill window
+-- that belongs to an item_quality_family group.  The player's selection is:
+--   * Previewed as "Will craft: <quality> <item>" at the bottom of the window.
+--   * Sent to the server so Spell::TakeReagents honours the chosen tier.
 --
 -- Installation: copy the QualityCraft/ folder to:
 --   <WoW>/Interface/AddOns/QualityCraft/
 
 local ADDON_PREFIX = "QCRAFT"
+local MAX_REAGENTS = 8  -- mirrors MAX_SPELL_REAGENTS on the server
 
--- Tables populated from server messages
--- qualityFamilies[itemId] = familyId
--- familyItems[familyId]   = { itemId, ... }
--- spellOutput[spellId][quality] = outputItemId
-local qualityFamilies = {}
-local familyItems     = {}
-local spellOutput     = {}
-
--- Quality metadata (matches item_template.Quality enum values)
+-- -----------------------------------------------------------------------
+-- Quality display helpers
+-- -----------------------------------------------------------------------
 local QUALITY_COLOR = {
     [0] = "|cff9d9d9d",  -- Poor
     [1] = "|cffffffff",  -- Common
@@ -27,188 +22,379 @@ local QUALITY_COLOR = {
     [4] = "|cffa335ee",  -- Epic
     [5] = "|cffff8000",  -- Legendary
 }
-local QUALITY_NAME = { [0]="Poor", [1]="Common", [2]="Uncommon", [3]="Rare", [4]="Epic", [5]="Legendary" }
+local QUALITY_NAME = {
+    [0] = "Poor", [1] = "Common", [2] = "Uncommon",
+    [3] = "Rare",  [4] = "Epic",   [5] = "Legendary",
+}
 
 -- -----------------------------------------------------------------------
--- Addon message handling
+-- Data tables populated from server messages
+-- -----------------------------------------------------------------------
+-- itemFamilyId[itemId]           = familyId
+-- familyQuality[itemId]          = explicit quality tier (from item_quality_family.quality)
+-- familyByQuality[familyId]      = { [quality] = itemId }
+-- spellOutput[spellId][quality]  = outputItemId
+local itemFamilyId    = {}
+local familyQuality   = {}
+local familyByQuality = {}
+local spellOutput     = {}
+
+-- -----------------------------------------------------------------------
+-- Addon message registration
 -- -----------------------------------------------------------------------
 RegisterAddonMessagePrefix(ADDON_PREFIX)
 
-local msgFrame = CreateFrame("Frame")
-msgFrame:RegisterEvent("CHAT_MSG_ADDON")
-msgFrame:RegisterEvent("TRADE_SKILL_UPDATE")
-msgFrame:RegisterEvent("TRADE_SKILL_SHOW")
-msgFrame:RegisterEvent("ADDON_LOADED")
+-- -----------------------------------------------------------------------
+-- Frames and UI state
+-- -----------------------------------------------------------------------
+local mainFrame = CreateFrame("Frame")
+mainFrame:RegisterEvent("CHAT_MSG_ADDON")
+mainFrame:RegisterEvent("ADDON_LOADED")
+mainFrame:RegisterEvent("TRADE_SKILL_SHOW")
+mainFrame:RegisterEvent("TRADE_SKILL_UPDATE")
+mainFrame:RegisterEvent("TRADE_SKILL_CLOSE")
 
-local outputLabel  -- FontString added to TradeSkillFrame
+local outputLabel                -- FontString at bottom of TradeSkillFrame
+local pickerButtons = {}         -- pickerButtons[i] = picker Button for reagent slot i (1-based)
+local dropdownFrame              -- UIDropDownMenu frame (shared)
+local dropdownSlot               -- 1-based reagent slot the current dropdown is for
+local dropdownSpellId            -- spellId the current dropdown belongs to
 
+-- -----------------------------------------------------------------------
+-- SavedVariables helpers (QualityCraftDB.selections[spellId][slot] = itemId)
+-- -----------------------------------------------------------------------
+local function GetSelection(spellId, slot)  -- slot is 0-based
+    if not QualityCraftDB or not QualityCraftDB.selections then return 0 end
+    local t = QualityCraftDB.selections[spellId]
+    return t and (t[slot] or 0) or 0
+end
+
+local function SaveSelection(spellId, slot, itemId)  -- slot is 0-based
+    QualityCraftDB = QualityCraftDB or {}
+    QualityCraftDB.selections = QualityCraftDB.selections or {}
+    QualityCraftDB.selections[spellId] = QualityCraftDB.selections[spellId] or {}
+    QualityCraftDB.selections[spellId][slot] = itemId
+end
+
+-- -----------------------------------------------------------------------
+-- Server communication
+-- -----------------------------------------------------------------------
+local function SendSelectionToServer(spellId)
+    local parts = {}
+    for i = 0, MAX_REAGENTS - 1 do
+        parts[i + 1] = tostring(GetSelection(spellId, i))
+    end
+    SendAddonMessage(ADDON_PREFIX, "SEL|" .. spellId .. "|" .. table.concat(parts, ","),
+                     "WHISPER", UnitName("player"))
+end
+
+-- -----------------------------------------------------------------------
+-- Message parsing
+-- -----------------------------------------------------------------------
 local function ParseFamilyMessage(data)
-    -- "F|<familyId>|<itemId1>,<itemId2>,..."
-    local familyId, itemList = data:match("^(%d+)|(.+)$")
+    -- Protocol: "F|<familyId>|<q1>:<itemId1>,<q2>:<itemId2>,..."
+    local familyId, entryList = data:match("^(%d+)|(.+)$")
     familyId = tonumber(familyId)
     if not familyId then return end
 
-    familyItems[familyId] = familyItems[familyId] or {}
-    for idStr in itemList:gmatch("[^,]+") do
-        local itemId = tonumber(idStr)
-        if itemId then
-            qualityFamilies[itemId] = familyId
-            local found = false
-            for _, v in ipairs(familyItems[familyId]) do
-                if v == itemId then found = true; break end
-            end
-            if not found then
-                table.insert(familyItems[familyId], itemId)
-            end
+    familyByQuality[familyId] = familyByQuality[familyId] or {}
+    for entry in entryList:gmatch("[^,]+") do
+        local q, id = entry:match("^(%d+):(%d+)$")
+        q  = tonumber(q)
+        id = tonumber(id)
+        if q and id then
+            itemFamilyId[id]              = familyId
+            familyQuality[id]             = q
+            familyByQuality[familyId][q]  = id
         end
     end
 end
 
 local function ParseOutputMessage(data)
-    -- "O|<spellId>:<quality>:<itemId>[;<spellId>:...]"
+    -- Protocol: "O|<spellId>:<quality>:<itemId>[;<spellId>:...]"
     for entry in data:gmatch("[^;]+") do
-        local spellId, quality, itemId = entry:match("^(%d+):(%d+):(%d+)$")
-        spellId  = tonumber(spellId)
-        quality  = tonumber(quality)
-        itemId   = tonumber(itemId)
-        if spellId and quality and itemId then
-            spellOutput[spellId] = spellOutput[spellId] or {}
-            spellOutput[spellId][quality] = itemId
+        local sid, q, id = entry:match("^(%d+):(%d+):(%d+)$")
+        sid = tonumber(sid)
+        q   = tonumber(q)
+        id  = tonumber(id)
+        if sid and q and id then
+            spellOutput[sid]    = spellOutput[sid] or {}
+            spellOutput[sid][q] = id
         end
     end
 end
 
 -- -----------------------------------------------------------------------
--- Quality preview logic
+-- Helpers
 -- -----------------------------------------------------------------------
-
--- Returns the spell ID embedded in a recipe link (|Henchant:SPELLID|h).
-local function GetSpellIdFromLink(link)
+local function GetCurrentSpellId()
+    local idx = GetTradeSkillSelectionIndex()
+    if not idx or idx == 0 then return nil end
+    local link = GetTradeSkillRecipeLink(idx)
     if not link then return nil end
     return tonumber(link:match("|Henchant:(%d+)|h"))
 end
 
--- Returns the best quality (and matching itemId) of any family member the
--- player currently has in their bags for the given base itemId.
-local function GetBestFamilyQuality(baseItemId)
-    local fid = qualityFamilies[baseItemId]
-    local candidates = fid and familyItems[fid] or { baseItemId }
-
-    local bestQuality = -1
-    local bestItemId  = nil
-    for _, variantId in ipairs(candidates) do
-        local count = GetItemCount(variantId) or 0
-        if count > 0 then
-            local _, _, quality = GetItemInfo(variantId)
-            quality = quality or 1
-            if quality > bestQuality then
-                bestQuality = quality
-                bestItemId  = variantId
-            end
-        end
-    end
-    return (bestQuality >= 0) and bestQuality or nil, bestItemId
+local function GetReagentItemId(skillIndex, reagentIndex)
+    local link = GetTradeSkillReagentItemLink(skillIndex, reagentIndex)
+    if not link then return nil end
+    return tonumber(link:match("|Hitem:(%d+):"))
 end
 
--- Updates the quality-preview label in the TradeSkill frame.
-local function UpdateQualityLabel()
-    if not outputLabel then return end
-    if not TradeSkillFrame or not TradeSkillFrame:IsShown() then
-        outputLabel:SetText("")
-        return
-    end
-
-    local index = TradeSkillFrame.selectedSkill
-    if not index then
-        outputLabel:SetText("")
-        return
-    end
-
-    local recipeLink = GetTradeSkillRecipeLink(index)
-    local spellId    = GetSpellIdFromLink(recipeLink)
-    if not spellId or not spellOutput[spellId] then
-        outputLabel:SetText("")
-        return
-    end
-
-    -- Find the highest quality among reagents that belong to a family
-    local numReagents   = GetTradeSkillNumReagents(index)
-    local detectedQuality = nil
+-- Determine the effective quality that will be used when crafting
+-- (the lowest quality among user-selected reagents that have an output mapping)
+local function GetEffectiveCraftQuality(spellId, tradeIndex)
+    if not spellOutput[spellId] then return nil end
+    local numReagents = GetTradeSkillNumReagents(tradeIndex)
+    local effectiveQ  = nil
 
     for i = 1, numReagents do
-        local reagentName, _, reagentCount = GetTradeSkillReagentInfo(index, i)
-        if reagentName then
-            -- Resolve reagent name -> itemId via family tables
-            for itemId, _ in pairs(qualityFamilies) do
-                local name = GetItemInfo(itemId)
-                if name == reagentName then
-                    local quality = GetBestFamilyQuality(itemId)
-                    if quality and (not detectedQuality or quality > detectedQuality) then
-                        detectedQuality = quality
+        local baseId = GetReagentItemId(tradeIndex, i)
+        if baseId and itemFamilyId[baseId] then
+            local fid    = itemFamilyId[baseId]
+            local selId  = GetSelection(spellId, i - 1)
+            local usedQ
+
+            if selId and selId ~= 0 and familyQuality[selId] then
+                usedQ = familyQuality[selId]
+            else
+                -- Auto: pick best available in bags
+                for q = 5, 0, -1 do
+                    local vid = familyByQuality[fid] and familyByQuality[fid][q]
+                    if vid and (GetItemCount(vid) or 0) > 0 then
+                        usedQ = q
+                        break
                     end
-                    break
+                end
+            end
+
+            if usedQ then
+                if effectiveQ == nil or usedQ < effectiveQ then
+                    effectiveQ = usedQ
                 end
             end
         end
     end
-
-    if detectedQuality and spellOutput[spellId][detectedQuality] then
-        local outItemId = spellOutput[spellId][detectedQuality]
-        local name, _, quality = GetItemInfo(outItemId)
-        if name then
-            local color = QUALITY_COLOR[quality] or "|cffffffff"
-            outputLabel:SetText("Will craft: " .. color .. name .. "|r")
-            return
-        end
-    end
-
-    outputLabel:SetText("")
+    return effectiveQ
 end
 
 -- -----------------------------------------------------------------------
--- Frame / UI setup
+-- Dropdown initialisation callback (called by UIDropDownMenu_Initialize)
 -- -----------------------------------------------------------------------
+local function DropdownInit(self, level)
+    if not dropdownSlot or not dropdownSpellId then return end
 
-local function EnsureLabel()
+    local tradeIndex = GetTradeSkillSelectionIndex()
+    if not tradeIndex or tradeIndex == 0 then return end
+
+    local baseItemId = GetReagentItemId(tradeIndex, dropdownSlot)
+    if not baseItemId then return end
+
+    local fid = itemFamilyId[baseItemId]
+    if not fid or not familyByQuality[fid] then return end
+
+    local currentItemId = GetSelection(dropdownSpellId, dropdownSlot - 1)
+
+    -- "Auto" entry
+    local autoInfo = UIDropDownMenu_CreateInfo()
+    autoInfo.notCheckable = false
+    autoInfo.checked      = (currentItemId == 0)
+    autoInfo.text         = "|cffaaaaaa(Auto – use best available)|r"
+    autoInfo.func = function()
+        SaveSelection(dropdownSpellId, dropdownSlot - 1, 0)
+        SendSelectionToServer(dropdownSpellId)
+        UpdateQualityUI()
+    end
+    UIDropDownMenu_AddButton(autoInfo, level)
+
+    -- One entry per quality tier, sorted ascending
+    local qualities = {}
+    for q in pairs(familyByQuality[fid]) do
+        table.insert(qualities, q)
+    end
+    table.sort(qualities)
+
+    for _, q in ipairs(qualities) do
+        local variantId = familyByQuality[fid][q]
+        local name, _   = GetItemInfo(variantId)
+        local count     = GetItemCount(variantId) or 0
+        local color     = QUALITY_COLOR[q] or "|cffffffff"
+        local qname     = QUALITY_NAME[q] or tostring(q)
+
+        local info          = UIDropDownMenu_CreateInfo()
+        info.notCheckable   = false
+        info.checked        = (currentItemId == variantId)
+        info.disabled       = (count == 0)
+        info.text           = color .. qname .. "|r  " .. (name or "?") .. "  |cffaaaaaa(" .. count .. ")|r"
+        local capturedId    = variantId
+        info.func = function()
+            SaveSelection(dropdownSpellId, dropdownSlot - 1, capturedId)
+            SendSelectionToServer(dropdownSpellId)
+            UpdateQualityUI()
+        end
+        UIDropDownMenu_AddButton(info, level)
+    end
+end
+
+-- -----------------------------------------------------------------------
+-- Picker button per reagent slot
+-- -----------------------------------------------------------------------
+local function GetOrCreatePickerButton(i)
+    if pickerButtons[i] then return pickerButtons[i] end
+
+    local parent = _G["TradeSkillReagent" .. i]
+    if not parent then return nil end
+
+    local btn = CreateFrame("Button", "QCPickerBtn" .. i, parent)
+    btn:SetWidth(16)
+    btn:SetHeight(16)
+    btn:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
+    btn:SetFrameLevel(parent:GetFrameLevel() + 5)
+
+    local bg = btn:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints()
+    bg:SetTexture(0, 0, 0, 0.75)
+    btn.bg = bg
+
+    local lbl = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    lbl:SetAllPoints()
+    lbl:SetJustifyH("CENTER")
+    lbl:SetJustifyV("MIDDLE")
+    lbl:SetText("|cffffffff▾|r")
+    btn.label = lbl
+
+    btn.reagentSlot = i  -- 1-based
+
+    btn:SetScript("OnClick", function(self)
+        dropdownSlot    = self.reagentSlot
+        dropdownSpellId = GetCurrentSpellId()
+        if not dropdownSpellId then return end
+        UIDropDownMenu_Initialize(dropdownFrame, DropdownInit, "MENU")
+        ToggleDropDownMenu(1, nil, dropdownFrame, self, 0, 0)
+    end)
+
+    btn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Click to select reagent quality tier", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    pickerButtons[i] = btn
+    return btn
+end
+
+-- -----------------------------------------------------------------------
+-- UpdateQualityUI  (also called by TradeSkillFrame_Update hook)
+-- -----------------------------------------------------------------------
+function UpdateQualityUI()
+    -- Hide all pickers initially
+    for _, b in pairs(pickerButtons) do b:Hide() end
+    if outputLabel then outputLabel:SetText("") end
+
+    if not TradeSkillFrame or not TradeSkillFrame:IsShown() then return end
+
+    local tradeIndex = GetTradeSkillSelectionIndex()
+    if not tradeIndex or tradeIndex == 0 then return end
+
+    local spellId = GetCurrentSpellId()
+    if not spellId then return end
+
+    local numReagents = GetTradeSkillNumReagents(tradeIndex)
+
+    for i = 1, numReagents do
+        local baseId = GetReagentItemId(tradeIndex, i)
+        if baseId and itemFamilyId[baseId] then
+            local fid = itemFamilyId[baseId]
+            local btn = GetOrCreatePickerButton(i)
+            if btn then
+                -- Colour the picker button based on the selected quality
+                local selId = GetSelection(spellId, i - 1)
+                local selQ
+                if selId and selId ~= 0 then
+                    selQ = familyQuality[selId]
+                else
+                    for q = 5, 0, -1 do
+                        local vid = familyByQuality[fid] and familyByQuality[fid][q]
+                        if vid and (GetItemCount(vid) or 0) > 0 then
+                            selQ = q; break
+                        end
+                    end
+                end
+                local c = selQ and (QUALITY_COLOR[selQ] or "|cffffffff") or "|cffaaaaaa"
+                btn.label:SetText(c .. "▾|r")
+                btn:Show()
+            end
+        end
+    end
+
+    -- Output preview
+    if outputLabel and spellOutput[spellId] then
+        local effectiveQ = GetEffectiveCraftQuality(spellId, tradeIndex)
+        if effectiveQ and spellOutput[spellId][effectiveQ] then
+            local outId       = spellOutput[spellId][effectiveQ]
+            local name, _, iq = GetItemInfo(outId)
+            if name then
+                local c = QUALITY_COLOR[iq] or "|cffffffff"
+                outputLabel:SetText("Will craft: " .. c .. name .. "|r")
+            end
+        end
+    end
+end
+
+-- -----------------------------------------------------------------------
+-- Frame helpers
+-- -----------------------------------------------------------------------
+local function EnsureOutputLabel()
     if outputLabel then return end
     if not TradeSkillFrame then return end
-
-    outputLabel = TradeSkillFrame:CreateFontString(
-        "QualityCraftOutputLabel", "OVERLAY", "GameFontNormalSmall")
+    outputLabel = TradeSkillFrame:CreateFontString("QCOutputLabel", "OVERLAY", "GameFontNormalSmall")
     outputLabel:SetPoint("BOTTOMLEFT", TradeSkillFrame, "BOTTOMLEFT", 8, 8)
-    outputLabel:SetWidth(300)
+    outputLabel:SetWidth(320)
     outputLabel:SetJustifyH("LEFT")
     outputLabel:SetText("")
 end
 
-msgFrame:SetScript("OnEvent", function(self, event, ...)
+local function EnsureDropdown()
+    if dropdownFrame then return end
+    dropdownFrame = CreateFrame("Frame", "QCDropdownFrame", UIParent, "UIDropDownMenuTemplate")
+end
+
+-- -----------------------------------------------------------------------
+-- OnEvent dispatcher
+-- -----------------------------------------------------------------------
+mainFrame:SetScript("OnEvent", function(self, event, ...)
     if event == "CHAT_MSG_ADDON" then
-        local prefix, message, _, sender = ...
-        if prefix ~= ADDON_PREFIX then return end
-
-        local msgType = message:sub(1, 1)
-        local data    = message:sub(3)  -- skip "X|"
-
-        if msgType == "F" then
+        local pfx, msg = ...
+        if pfx ~= ADDON_PREFIX then return end
+        local t    = msg:sub(1, 1)
+        local data = msg:sub(3)
+        if t == "F" then
             ParseFamilyMessage(data)
-        elseif msgType == "O" then
+        elseif t == "O" then
             ParseOutputMessage(data)
         end
 
     elseif event == "ADDON_LOADED" then
-        local addonName = ...
-        if addonName == "QualityCraft" then
-            -- Hook TradeSkillFrame_Update if it exists already
-            if TradeSkillFrame_Update then
-                hooksecurefunc("TradeSkillFrame_Update", UpdateQualityLabel)
-            end
+        local name = ...
+        if name ~= "QualityCraft" then return end
+        if not QualityCraftDB then QualityCraftDB = {} end
+        if not QualityCraftDB.selections then QualityCraftDB.selections = {} end
+        EnsureDropdown()
+        if TradeSkillFrame_Update then
+            hooksecurefunc("TradeSkillFrame_Update", UpdateQualityUI)
         end
 
     elseif event == "TRADE_SKILL_SHOW" then
-        EnsureLabel()
-        UpdateQualityLabel()
+        EnsureOutputLabel()
+        EnsureDropdown()
+        UpdateQualityUI()
 
     elseif event == "TRADE_SKILL_UPDATE" then
-        UpdateQualityLabel()
+        UpdateQualityUI()
+
+    elseif event == "TRADE_SKILL_CLOSE" then
+        for _, b in pairs(pickerButtons) do b:Hide() end
+        if outputLabel then outputLabel:SetText("") end
     end
 end)

@@ -10,13 +10,10 @@ local ADDON_PREFIX = "QCRAFT"
 -- Maximum bytes per addon message (WoW client limit is 255 bytes per message).
 local MAX_MSG = 240
 
--- Helper: send a message, chunking if necessary.
--- Each logical message must be short enough; callers are responsible for
--- building messages that fit within MAX_MSG.
+-- Helper: send a message, discarding any that are still too long.
 local function Send(player, msg)
-    -- Silently drop oversized messages rather than corrupting data.
     if #msg > MAX_MSG then
-        print("[QualityCraft] Warning: message too long, truncating: " .. msg:sub(1, 60))
+        print("[QualityCraft] Warning: message too long (" .. #msg .. " bytes): " .. msg:sub(1, 60))
         return
     end
     player:SendAddonMessage(ADDON_PREFIX, msg, "WHISPER", player)
@@ -25,22 +22,24 @@ end
 local function OnLogin(event, player)
     -- ---------------------------------------------------------------
     -- 1. Send item quality family data
-    --    Protocol: "F|<familyId>|<itemId1>,<itemId2>,..."
+    --    Protocol: "F|<familyId>|<quality1>:<itemId1>,<quality2>:<itemId2>,..."
+    --    Each item is encoded as quality:itemId so the client knows the tier.
     -- ---------------------------------------------------------------
-    local familyResult = WorldDBQuery("SELECT family_id, item_id FROM item_quality_family ORDER BY family_id, item_id")
+    local familyResult = WorldDBQuery("SELECT family_id, item_id, quality FROM item_quality_family ORDER BY family_id, quality")
     if familyResult then
         local families = {}
         repeat
             local familyId = familyResult:GetUInt32(0)
             local itemId   = familyResult:GetUInt32(1)
+            local quality  = familyResult:GetUInt32(2)
             if not families[familyId] then
                 families[familyId] = {}
             end
-            table.insert(families[familyId], itemId)
+            table.insert(families[familyId], quality .. ":" .. itemId)
         until not familyResult:NextRow()
 
-        for familyId, items in pairs(families) do
-            Send(player, "F|" .. familyId .. "|" .. table.concat(items, ","))
+        for familyId, entries in pairs(families) do
+            Send(player, "F|" .. familyId .. "|" .. table.concat(entries, ","))
         end
     end
 
@@ -50,7 +49,7 @@ local function OnLogin(event, player)
     -- ---------------------------------------------------------------
     local outputResult = WorldDBQuery("SELECT spell_id, quality, item_id FROM spell_quality_output ORDER BY spell_id, quality")
     if outputResult then
-        local batch   = {}
+        local batch    = {}
         local batchLen = 2  -- "O|" prefix
 
         local function FlushBatch()
