@@ -5138,3 +5138,57 @@ std::vector<uint32> const* SpellMgr::GetItemQualityFamily(uint32 itemId) const
 
     return &familyItr->second;
 }
+
+void SpellMgr::LoadSpellQualityOutputs()
+{
+    uint32 oldMSTime = getMSTime();
+
+    mSpellQualityOutputMap.clear();
+
+    QueryResult result = WorldDatabase.Query("SELECT spell_id, quality, item_id FROM spell_quality_output");
+    if (!result)
+    {
+        TC_LOG_INFO("server.loading", ">> Loaded 0 spell quality outputs. DB table `spell_quality_output` is empty.");
+        return;
+    }
+
+    uint32 count = 0;
+    do
+    {
+        Field* fields = result->Fetch();
+
+        uint32 spellId  = fields[0].GetUInt32();
+        uint8  quality  = fields[1].GetUInt8();
+        uint32 itemId   = fields[2].GetUInt32();
+
+        if (!GetSpellInfo(spellId))
+        {
+            TC_LOG_ERROR("sql.sql", "Spell {} listed in `spell_quality_output` does not exist, skipping.", spellId);
+            continue;
+        }
+
+        if (!sObjectMgr->GetItemTemplate(itemId))
+        {
+            TC_LOG_ERROR("sql.sql", "Item {} listed in `spell_quality_output` (spell {}) does not exist in `item_template`, skipping.", itemId, spellId);
+            continue;
+        }
+
+        mSpellQualityOutputMap[spellId][quality] = itemId;
+        ++count;
+    } while (result->NextRow());
+
+    TC_LOG_INFO("server.loading", ">> Loaded {} spell quality output entries in {} ms", count, GetMSTimeDiffToNow(oldMSTime));
+}
+
+uint32 SpellMgr::GetSpellQualityOutput(uint32 spellId, uint8 quality) const
+{
+    auto spellItr = mSpellQualityOutputMap.find(spellId);
+    if (spellItr == mSpellQualityOutputMap.end())
+        return 0;
+
+    auto qualityItr = spellItr->second.find(quality);
+    if (qualityItr == spellItr->second.end())
+        return 0;
+
+    return qualityItr->second;
+}

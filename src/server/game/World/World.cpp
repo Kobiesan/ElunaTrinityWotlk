@@ -1976,6 +1976,9 @@ void World::SetInitialWorldSettings()
     TC_LOG_INFO("server.loading", "Loading item quality families...");
     sSpellMgr->LoadItemQualityFamilies();
 
+    TC_LOG_INFO("server.loading", "Loading spell quality outputs...");
+    sSpellMgr->LoadSpellQualityOutputs();
+
     TC_LOG_INFO("server.loading", "Loading Player Create Data...");
     sObjectMgr->LoadPlayerInfo();
 

@@ -703,8 +703,10 @@ class TC_GAME_API SpellMgr
         void LoadSpellInfoDiminishing();
         void LoadSpellInfoImmunities();
         void LoadItemQualityFamilies();
+        void LoadSpellQualityOutputs();
 
         std::vector<uint32> const* GetItemQualityFamily(uint32 itemId) const;
+        uint32 GetSpellQualityOutput(uint32 spellId, uint8 quality) const;
 
     private:
         SpellDifficultySearcherMap mSpellDifficultySearcherMap;
@@ -736,6 +738,8 @@ class TC_GAME_API SpellMgr
         SpellInfoMap               mSpellInfoMap;
         std::unordered_map<uint32, uint32>              mItemQualityFamilyMap;      // item_id -> family_id
         std::unordered_map<uint32, std::vector<uint32>> mItemQualityFamilyMembers;  // family_id -> [item_ids]
+        // spell_id -> (quality -> output_item_id)
+        std::unordered_map<uint32, std::unordered_map<uint8, uint32>> mSpellQualityOutputMap;
 
     friend class UnitTestDataLoader;
 };
