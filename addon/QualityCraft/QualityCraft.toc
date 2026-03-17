@@ -1,0 +1,8 @@
+## Interface: 30300
+## Title: QualityCraft
+## Notes: Shows what quality item you will craft based on the quality of your reagents.
+## Author: Custom
+## Version: 1.0
+## SavedVariables: QualityCraftDB
+
+QualityCraft.lua

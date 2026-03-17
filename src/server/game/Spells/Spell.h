@@ -341,6 +341,10 @@ class TC_GAME_API Spell
         SpellCastResult CheckArenaCastRules() const;
         SpellCastResult CheckMovement() const;
 
+        // Returns the item ID the player can actually use to satisfy a reagent slot:
+        // returns a family-variant ID if the player has one, otherwise returns itemId unchanged.
+        static uint32 FindAvailableReagentVariant(Player const* player, uint32 itemId, uint32 itemCount);
+
         bool CheckSpellCancelsAuraEffect(AuraType auraType, uint32* param1) const;
         bool CheckSpellCancelsCharm(uint32* param1) const;
         bool CheckSpellCancelsStun(uint32* param1) const;
@@ -400,6 +404,7 @@ class TC_GAME_API Spell
         bool m_fromClient;
         uint32 m_glyphIndex;
         SpellCastTargets m_targets;
+        uint32 m_overrideCreateItemId;  // Set by TakeReagents when a quality-family variant is substituted
 
         void AddComboPointGain(Unit* target, int8 amount)
         {
