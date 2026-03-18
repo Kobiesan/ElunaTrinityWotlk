@@ -28,6 +28,8 @@ TC_COMMON_API Minutes GetOffsetByHash(uint32 hash);
 
 // Returns the time offset that must be added to UTC time to get localtime
 TC_COMMON_API Minutes GetSystemZoneOffsetAt(SystemTimePoint date);
+// When applyDst is true, accounts for DST (Daylight Saving Time) by using the current date
+// to determine the offset. When false, returns the base (non-DST) offset.
 TC_COMMON_API Minutes GetSystemZoneOffset(bool applyDst = true);
 
 TC_COMMON_API std::string GetSystemZoneName();

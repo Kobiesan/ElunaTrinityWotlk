@@ -104,19 +104,49 @@ std::unordered_map<uint32, Minutes, std::identity> const& GetTimezoneOffsetsByHa
 }
 
 using ClientSupportedTimezone = std::pair<Minutes, std::string>;
-std::array<ClientSupportedTimezone, 11> const _clientSupportedTimezones =
+// Comprehensive list of world time zones to support businesses globally.
+// Offsets are base (non-DST / non-Daylight Saving Time) UTC offsets in minutes.
+std::array<ClientSupportedTimezone, 39> const _clientSupportedTimezones =
 {{
+    { -720min, "Etc/GMT+12" },
+    { -660min, "Pacific/Midway" },
+    { -600min, "Pacific/Honolulu" },
+    { -570min, "Pacific/Marquesas" },
+    { -540min, "America/Anchorage" },
     { -480min, "America/Los_Angeles" },
     { -420min, "America/Denver" },
     { -360min, "America/Chicago" },
     { -300min, "America/New_York" },
+    { -240min, "America/Halifax" },
+    { -210min, "America/St_Johns" },
     { -180min, "America/Sao_Paulo" },
+    { -120min, "America/Noronha" },
+    {  -60min, "Atlantic/Azores" },
     {    0min, "Etc/UTC" },
     {   60min, "Europe/Paris" },
+    {  120min, "Europe/Helsinki" },
+    {  180min, "Europe/Moscow" },
+    {  210min, "Asia/Tehran" },
+    {  240min, "Asia/Dubai" },
+    {  270min, "Asia/Kabul" },
+    {  300min, "Asia/Karachi" },
+    {  330min, "Asia/Kolkata" },
+    {  345min, "Asia/Kathmandu" },
+    {  360min, "Asia/Dhaka" },
+    {  390min, "Asia/Yangon" },
+    {  420min, "Asia/Bangkok" },
     {  480min, "Asia/Shanghai" },
     {  480min, "Asia/Taipei" },
+    {  525min, "Australia/Eucla" },
     {  540min, "Asia/Seoul" },
+    {  540min, "Asia/Tokyo" },
+    {  570min, "Australia/Darwin" },
     {  600min, "Australia/Melbourne" },
+    {  630min, "Australia/Lord_Howe" },
+    {  660min, "Pacific/Guadalcanal" },
+    {  720min, "Pacific/Auckland" },
+    {  765min, "Pacific/Chatham" },
+    {  780min, "Pacific/Apia" },
 }};
 }
 
@@ -144,6 +174,8 @@ Minutes GetSystemZoneOffsetAt(SystemTimePoint date)
 
 Minutes GetSystemZoneOffset(bool applyDst /*= true*/)
 {
+    // When applyDst (Daylight Saving Time) is true, we use the current time to account
+    // for DST shifts. When false, we use epoch (time 0) to get the base/standard offset.
     std::chrono::system_clock::time_point date = std::chrono::system_clock::from_time_t(std::time_t(0));
     if (applyDst)
         date = std::chrono::system_clock::now();
