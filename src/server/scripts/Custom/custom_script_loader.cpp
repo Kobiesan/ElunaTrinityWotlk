@@ -16,9 +16,11 @@
  */
 
 // This is where scripts' loading functions should be declared:
+void AddQualityCraftScripts();
 
 // The name of this function should match:
 // void Add${NameOfDirectory}Scripts()
 void AddCustomScripts()
 {
+    AddQualityCraftScripts();
 }

@@ -514,6 +514,7 @@ m_caster((info->HasAttribute(SPELL_ATTR6_CAST_BY_CHARMER) && caster->GetCharmerO
 {
     m_customError = SPELL_CUSTOM_ERROR_NONE;
     m_fromClient = false;
+    m_overrideCreateItemId = 0;
     m_selfContainer = nullptr;
     m_referencedFromCurrentSpell = false;
     m_executedCurrently = false;
@@ -5103,6 +5104,30 @@ void Spell::TakeReagents()
         if (m_targets.GetItemTargetEntry() == itemid)
             m_targets.SetItemTarget(nullptr);
 
+        uint32 originalItemId = itemid;
+
+        // Check if the player has expressed a quality preference for this reagent slot
+        uint32 preferredId = sSpellMgr->GetCraftPreference(p_caster->GetGUID().GetRawValue(), m_spellInfo->Id, static_cast<uint8>(x));
+        if (preferredId && preferredId != itemid
+            && p_caster->HasItemCount(preferredId, itemcount)
+            && sSpellMgr->AreInSameFamily(itemid, preferredId))
+        {
+            itemid = preferredId;
+        }
+
+        // Fall back to any available family variant if the chosen item isn't present
+        if (!p_caster->HasItemCount(itemid, itemcount))
+            itemid = FindAvailableReagentVariant(p_caster, itemid, itemcount);
+
+        // If a quality variant was substituted, determine the quality-specific output item.
+        // Use the explicit quality stored in item_quality_family rather than item_template.Quality.
+        if (itemid != originalItemId)
+        {
+            uint8 reagentQuality = sSpellMgr->GetItemFamilyQuality(itemid);
+            if (uint32 qualityOutput = sSpellMgr->GetSpellQualityOutput(m_spellInfo->Id, reagentQuality))
+                m_overrideCreateItemId = qualityOutput;
+        }
+
         p_caster->DestroyItemCount(itemid, itemcount, true);
     }
 }
@@ -6688,6 +6713,24 @@ SpellCastResult Spell::CheckPower() const
         return SPELL_CAST_OK;
 }
 
+// static
+uint32 Spell::FindAvailableReagentVariant(Player const* player, uint32 itemId, uint32 itemCount)
+{
+    if (player->HasItemCount(itemId, itemCount))
+        return itemId;
+
+    if (std::vector<uint32> const* family = sSpellMgr->GetItemQualityFamily(itemId))
+    {
+        for (uint32 variantId : *family)
+        {
+            if (player->HasItemCount(variantId, itemCount))
+                return variantId;
+        }
+    }
+
+    return itemId;  // not found – return original so callers can handle the failure
+}
+
 SpellCastResult Spell::CheckItems(uint32* param1 /*= nullptr*/, uint32* param2 /*= nullptr*/) const
 {
     Player* player = m_caster->ToPlayer();
@@ -6824,9 +6867,14 @@ SpellCastResult Spell::CheckItems(uint32* param1 /*= nullptr*/, uint32* param2 /
                 }
                 if (!player->HasItemCount(itemid, itemcount))
                 {
-                    if (param1)
-                        *param1 = itemid;
-                    return SPELL_FAILED_REAGENTS;
+                    // Check if a quality family variant satisfies the reagent requirement
+                    uint32 availableId = FindAvailableReagentVariant(player, itemid, itemcount);
+                    if (!player->HasItemCount(availableId, itemcount))
+                    {
+                        if (param1)
+                            *param1 = itemid;
+                        return SPELL_FAILED_REAGENTS;
+                    }
                 }
             }
         }
