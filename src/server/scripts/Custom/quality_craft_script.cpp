@@ -182,7 +182,10 @@ private:
         if (!spellInfo->HasAttribute(SPELL_ATTR0_TRADESPELL))
             return;
 
-        // Verify reagent availability (including quality variants)
+        // Verify reagent availability (including quality variants and count overrides)
+        uint8 selectedQuality = sSpellMgr->GetCraftQuality(
+            player->GetGUID().GetRawValue(), *spellId);
+
         for (uint32 i = 0; i < MAX_SPELL_REAGENTS; ++i)
         {
             if (spellInfo->Reagent[i] <= 0)
@@ -190,6 +193,14 @@ private:
 
             uint32 itemId = spellInfo->Reagent[i];
             uint32 itemCount = spellInfo->ReagentCount[i];
+
+            // Apply quality-specific reagent count override
+            if (selectedQuality > 0)
+            {
+                uint32 overrideCount = sSpellMgr->GetSpellQualityReagentCount(*spellId, selectedQuality, static_cast<uint8>(i));
+                if (overrideCount > 0)
+                    itemCount = overrideCount;
+            }
 
             if (!player->HasItemCount(itemId, itemCount))
             {
@@ -279,6 +290,37 @@ private:
 
         if (!first)
             SendAddonWhisper(player, outputPayload);
+
+        // Send spell quality reagent count overrides as "R|<spellId>:<q>:<slot>:<count>;..."
+        std::string reagentCountPayload = "R|";
+        first = true;
+        for (auto const& [spellId, qualityMap] : sSpellMgr->GetSpellQualityReagentCountMap())
+        {
+            for (auto const& [quality, slotMap] : qualityMap)
+            {
+                for (auto const& [slot, count] : slotMap)
+                {
+                    std::string entry = std::to_string(spellId) + ':' +
+                        std::to_string(quality) + ':' +
+                        std::to_string(slot) + ':' +
+                        std::to_string(count);
+
+                    if (!first && reagentCountPayload.size() + 1 + entry.size() > ADDON_MSG_MAX)
+                    {
+                        SendAddonWhisper(player, reagentCountPayload);
+                        reagentCountPayload = "R|";
+                        first = true;
+                    }
+
+                    if (!first) reagentCountPayload += ';';
+                    reagentCountPayload += entry;
+                    first = false;
+                }
+            }
+        }
+
+        if (!first)
+            SendAddonWhisper(player, reagentCountPayload);
     }
 };
 

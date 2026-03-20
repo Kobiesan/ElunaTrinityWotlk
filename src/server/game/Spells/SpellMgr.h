@@ -712,15 +712,18 @@ class TC_GAME_API SpellMgr
         void LoadSpellInfoImmunities();
         void LoadItemQualityFamilies();
         void LoadSpellQualityOutputs();
+        void LoadSpellQualityReagentCounts();
 
         std::vector<uint32> const* GetItemQualityFamily(uint32 itemId) const;
         uint8  GetItemFamilyQuality(uint32 itemId) const;
         bool   AreInSameFamily(uint32 itemId1, uint32 itemId2) const;
         uint32 GetSpellQualityOutput(uint32 spellId, uint8 quality) const;
+        uint32 GetSpellQualityReagentCount(uint32 spellId, uint8 quality, uint8 reagentSlot) const;
 
         // --- Accessors for QualityCraft client sync (SYNC command) ---
         auto const& GetItemQualityFamilyByQuality() const { return mItemQualityFamilyByQuality; }
         auto const& GetSpellQualityOutputMap()      const { return mSpellQualityOutputMap; }
+        auto const& GetSpellQualityReagentCountMap() const { return mSpellQualityReagentCountMap; }
 
         // Per-player reagent quality preferences: set from addon messages, consumed by TakeReagents.
         void   SetCraftPreference(uint64 playerGuid, uint32 spellId, uint8 reagentSlot, uint32 itemId);
@@ -773,6 +776,9 @@ class TC_GAME_API SpellMgr
 
         // spell_id -> (quality -> output_item_id)
         std::unordered_map<uint32, std::unordered_map<uint8, uint32>> mSpellQualityOutputMap;
+
+        // spell_id -> (quality -> (reagent_slot -> count))
+        std::unordered_map<uint32, std::unordered_map<uint8, std::unordered_map<uint8, uint32>>> mSpellQualityReagentCountMap;
 
         // Per-player reagent quality preferences: playerGuid -> spellId -> [preferredItemId per reagent slot]
         std::unordered_map<uint64, std::unordered_map<uint32, std::array<uint32, MAX_SPELL_REAGENTS>>> mCraftPreferences;
