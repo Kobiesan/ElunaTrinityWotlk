@@ -1,8 +1,5 @@
 ## Interface: 30300
 ## Title: QualityCraft
-## Notes: Shows what quality item you will craft based on the quality of your reagents.
-## Author: Custom
-## Version: 1.0
-## SavedVariables: QualityCraftDB
-
+## Notes: Lets you choose reagent quality tiers in the TradeSkill window.
+## SavedVariablesPerCharacter: QualityCraftDB
 QualityCraft.lua

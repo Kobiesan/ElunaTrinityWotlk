@@ -5129,6 +5129,15 @@ void Spell::TakeReagents()
         }
 
         p_caster->DestroyItemCount(itemid, itemcount, true);
+
+        // Determine output from the player's explicitly selected quality tier
+        uint8 selectedQuality = sSpellMgr->GetCraftQuality(
+            p_caster->GetGUID().GetRawValue(), m_spellInfo->Id);
+        if (selectedQuality > 0)
+        {
+            if (uint32 qualityOutput = sSpellMgr->GetSpellQualityOutput(m_spellInfo->Id, selectedQuality))
+                m_overrideCreateItemId = qualityOutput;
+        }
     }
 }
 
@@ -6728,7 +6737,7 @@ uint32 Spell::FindAvailableReagentVariant(Player const* player, uint32 itemId, u
         }
     }
 
-    return itemId;  // not found – return original so callers can handle the failure
+    return itemId;  // not found ? return original so callers can handle the failure
 }
 
 SpellCastResult Spell::CheckItems(uint32* param1 /*= nullptr*/, uint32* param2 /*= nullptr*/) const

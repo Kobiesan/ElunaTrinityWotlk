@@ -718,9 +718,16 @@ class TC_GAME_API SpellMgr
         bool   AreInSameFamily(uint32 itemId1, uint32 itemId2) const;
         uint32 GetSpellQualityOutput(uint32 spellId, uint8 quality) const;
 
+        // --- Accessors for QualityCraft client sync (SYNC command) ---
+        auto const& GetItemQualityFamilyByQuality() const { return mItemQualityFamilyByQuality; }
+        auto const& GetSpellQualityOutputMap()      const { return mSpellQualityOutputMap; }
+
         // Per-player reagent quality preferences: set from addon messages, consumed by TakeReagents.
         void   SetCraftPreference(uint64 playerGuid, uint32 spellId, uint8 reagentSlot, uint32 itemId);
         uint32 GetCraftPreference(uint64 playerGuid, uint32 spellId, uint8 reagentSlot) const;
+        void SetCraftQuality(uint64 playerGuid, uint32 spellId, uint8 quality);
+        uint8 GetCraftQuality(uint64 playerGuid, uint32 spellId) const;
+
         // Pass spellId = CLEAR_ALL_CRAFT_SPELLS to erase all spells for that player.
         static constexpr uint32 CLEAR_ALL_CRAFT_SPELLS = 0;
         void   ClearCraftPreferences(uint64 playerGuid, uint32 spellId);
@@ -769,6 +776,9 @@ class TC_GAME_API SpellMgr
 
         // Per-player reagent quality preferences: playerGuid -> spellId -> [preferredItemId per reagent slot]
         std::unordered_map<uint64, std::unordered_map<uint32, std::array<uint32, MAX_SPELL_REAGENTS>>> mCraftPreferences;
+
+        // Per-player selected quality tier: playerGuid -> spellId -> quality
+        std::unordered_map<uint64, std::unordered_map<uint32, uint8>> mCraftQuality;
 
     friend class UnitTestDataLoader;
 };

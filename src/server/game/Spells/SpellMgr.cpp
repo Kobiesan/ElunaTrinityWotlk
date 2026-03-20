@@ -5208,13 +5208,22 @@ uint32 SpellMgr::GetCraftPreference(uint64 playerGuid, uint32 spellId, uint8 rea
 void SpellMgr::ClearCraftPreferences(uint64 playerGuid, uint32 spellId)
 {
     auto playerItr = mCraftPreferences.find(playerGuid);
-    if (playerItr == mCraftPreferences.end())
-        return;
+    if (playerItr != mCraftPreferences.end())
+    {
+        if (spellId != CLEAR_ALL_CRAFT_SPELLS)
+            playerItr->second.erase(spellId);
+        else
+            mCraftPreferences.erase(playerItr);
+    }
 
-    if (spellId != CLEAR_ALL_CRAFT_SPELLS)
-        playerItr->second.erase(spellId);
-    else
-        mCraftPreferences.erase(playerItr);
+    auto qualityItr = mCraftQuality.find(playerGuid);
+    if (qualityItr != mCraftQuality.end())
+    {
+        if (spellId != CLEAR_ALL_CRAFT_SPELLS)
+            qualityItr->second.erase(spellId);
+        else
+            mCraftQuality.erase(qualityItr);
+    }
 }
 
 void SpellMgr::LoadSpellQualityOutputs()
@@ -5269,4 +5278,17 @@ uint32 SpellMgr::GetSpellQualityOutput(uint32 spellId, uint8 quality) const
         return 0;
 
     return qualityItr->second;
+}
+
+void SpellMgr::SetCraftQuality(uint64 playerGuid, uint32 spellId, uint8 quality)
+{
+    mCraftQuality[playerGuid][spellId] = quality;
+}
+
+uint8 SpellMgr::GetCraftQuality(uint64 playerGuid, uint32 spellId) const
+{
+    auto pItr = mCraftQuality.find(playerGuid);
+    if (pItr == mCraftQuality.end()) return 0;
+    auto sItr = pItr->second.find(spellId);
+    return sItr != pItr->second.end() ? sItr->second : 0;
 }
