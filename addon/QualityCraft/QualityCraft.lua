@@ -46,6 +46,7 @@ local QUALITY_NAME = {
 local itemFamilyId    = {}   -- itemId -> familyId
 local familyByQuality = {}   -- familyId -> { [quality] = itemId }
 local spellOutput     = {}   -- spellId  -> { [quality] = outputItemId }
+local spellReagentCount = {} -- spellId  -> { [quality] = { [slot] = count } }
 
 -- -----------------------------------------------------------------------
 -- UI state
@@ -120,7 +121,18 @@ local function GetReagentAtQuality(baseId, quality)
     return (fam and fam[quality]) or baseId
 end
 
-local function CalcAvailableAtQuality(tradeIndex, quality)
+local function GetReagentCountAtQuality(spellId, quality, slotIndex, baseCount)
+    if not spellId or not quality then return baseCount end
+    local qualityMap = spellReagentCount[spellId]
+    if not qualityMap then return baseCount end
+    local slotMap = qualityMap[quality]
+    if not slotMap then return baseCount end
+    -- slotIndex is 0-based (matching server-side reagent_slot)
+    local override = slotMap[slotIndex]
+    return override or baseCount
+end
+
+local function CalcAvailableAtQuality(tradeIndex, quality, spellId)
     local numReagents  = GetTradeSkillNumReagents(tradeIndex)
     local maxCraftable = huge
 
@@ -129,6 +141,11 @@ local function CalcAvailableAtQuality(tradeIndex, quality)
         local _, _, reagentCount, playerReagentCount =
             GetTradeSkillReagentInfo(tradeIndex, i)
         reagentCount = reagentCount or 1
+
+        -- Apply quality-specific reagent count override (slot is 0-based)
+        if spellId and quality then
+            reagentCount = GetReagentCountAtQuality(spellId, quality, i - 1, reagentCount)
+        end
 
         local playerCount
         if baseId and itemFamilyId[baseId] then
@@ -182,6 +199,9 @@ local function CalcTotalAvailableAllQualities(spellId, tradeIndex)
             local _, _, reagentCount = GetTradeSkillReagentInfo(tradeIndex, i)
             reagentCount = reagentCount or 1
 
+            -- Apply quality-specific reagent count override (slot is 0-based)
+            reagentCount = GetReagentCountAtQuality(spellId, q, i - 1, reagentCount)
+
             local useId = GetReagentAtQuality(baseId, q)
             local avail = remaining[useId] or (GetItemCount(useId) or 0)
             local possible = floor(avail / reagentCount)
@@ -195,6 +215,10 @@ local function CalcTotalAvailableAllQualities(spellId, tradeIndex)
                 local baseId = GetReagentItemId(tradeIndex, i)
                 local _, _, reagentCount = GetTradeSkillReagentInfo(tradeIndex, i)
                 reagentCount = reagentCount or 1
+
+                -- Apply quality-specific reagent count override (slot is 0-based)
+                reagentCount = GetReagentCountAtQuality(spellId, q, i - 1, reagentCount)
+
                 local useId = GetReagentAtQuality(baseId, q)
                 remaining[useId] = (remaining[useId] or 0) - (canMake * reagentCount)
             end
@@ -275,6 +299,18 @@ local function ParseOutputMessage(data)
     end
 end
 
+local function ParseReagentCountMessage(data)
+    for entry in data:gmatch("[^;]+") do
+        local sid, q, slot, cnt = entry:match("^(%d+):(%d+):(%d+):(%d+)$")
+        sid, q, slot, cnt = tonumber(sid), tonumber(q), tonumber(slot), tonumber(cnt)
+        if sid and q and slot and cnt then
+            spellReagentCount[sid] = spellReagentCount[sid] or {}
+            spellReagentCount[sid][q] = spellReagentCount[sid][q] or {}
+            spellReagentCount[sid][q][slot] = cnt
+        end
+    end
+end
+
 -- -----------------------------------------------------------------------
 -- Output dropdown initialisation
 -- -----------------------------------------------------------------------
@@ -295,7 +331,7 @@ local function DropdownInit(self, level)
     for _, q in ipairs(qualities) do
         local outId     = spellOutput[spellId][q]
         local name      = GetItemInfo(outId)
-        local available = CalcAvailableAtQuality(tradeIndex, q)
+        local available = CalcAvailableAtQuality(tradeIndex, q, spellId)
         local color     = QUALITY_COLOR[q] or "|cffffffff"
         local qname     = QUALITY_NAME[q] or tostring(q)
 
@@ -421,6 +457,11 @@ UpdateQualityUI = function()
             GetTradeSkillReagentInfo(tradeIndex, i)
         reagentCount = reagentCount or 1
 
+        -- Apply quality-specific reagent count override (slot is 0-based)
+        if effectiveQ then
+            reagentCount = GetReagentCountAtQuality(spellId, effectiveQ, i - 1, reagentCount)
+        end
+
         if baseId and itemFamilyId[baseId] and effectiveQ then
             local useId = GetReagentAtQuality(baseId, effectiveQ)
 
@@ -453,6 +494,40 @@ UpdateQualityUI = function()
                         GRAY_FONT_COLOR.r,
                         GRAY_FONT_COLOR.g,
                         GRAY_FONT_COLOR.b)
+                    allSatisfied = false
+                end
+            else
+                if playerCount < reagentCount then allSatisfied = false end
+            end
+        elseif effectiveQ and spellReagentCount[spellId] then
+            -- Non-family reagent with a count override: update count display
+            local playerCount = playerReagentCount or 0
+            local reagent    = reagentFrames[i]
+            local countLabel = reagentCounts[i]
+
+            if reagent and countLabel then
+                countLabel:SetText(
+                    (playerCount >= 100 and "*" or playerCount)
+                    .. " /" .. reagentCount)
+
+                if playerCount >= reagentCount then
+                    SetItemButtonTextureVertexColor(reagent, 1.0, 1.0, 1.0)
+                    local nameLabel = reagentNames[i]
+                    if nameLabel then
+                        nameLabel:SetTextColor(
+                            HIGHLIGHT_FONT_COLOR.r,
+                            HIGHLIGHT_FONT_COLOR.g,
+                            HIGHLIGHT_FONT_COLOR.b)
+                    end
+                else
+                    SetItemButtonTextureVertexColor(reagent, 0.5, 0.5, 0.5)
+                    local nameLabel = reagentNames[i]
+                    if nameLabel then
+                        nameLabel:SetTextColor(
+                            GRAY_FONT_COLOR.r,
+                            GRAY_FONT_COLOR.g,
+                            GRAY_FONT_COLOR.b)
+                    end
                     allSatisfied = false
                 end
             else
@@ -497,7 +572,7 @@ UpdateQualityUI = function()
                     if tradeIndex == skillIndex then
                         local eq = GetEffectiveCraftQuality(sid)
                         TradeSkillFrame.numAvailable =
-                            eq and CalcAvailableAtQuality(skillIndex, eq) or 0
+                            eq and CalcAvailableAtQuality(skillIndex, eq, sid) or 0
                     end
 
                     local btnCount = skillCounts[j]
@@ -547,7 +622,7 @@ local function CanCraftWithVariants(skillIndex)
 
     -- Quality recipe: craftable at any quality tier?
     for q in pairs(spellOutput[sid]) do
-        if CalcAvailableAtQuality(skillIndex, q) > 0 then
+        if CalcAvailableAtQuality(skillIndex, q, sid) > 0 then
             return true
         end
     end
@@ -840,6 +915,8 @@ mainFrame:SetScript("OnEvent", function(self, event, ...)
             ParseFamilyMessage(data)
         elseif tag == "O" then
             ParseOutputMessage(data)
+        elseif tag == "R" then
+            ParseReagentCountMessage(data)
         end
         UpdateQualityUI()
 

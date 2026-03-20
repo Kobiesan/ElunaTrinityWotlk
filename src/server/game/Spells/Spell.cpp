@@ -5073,6 +5073,10 @@ void Spell::TakeReagents()
     if (p_caster->CanNoReagentCast(m_spellInfo))
         return;
 
+    // Determine the player's explicitly selected quality tier (used for count overrides and output)
+    uint8 selectedQuality = sSpellMgr->GetCraftQuality(
+        p_caster->GetGUID().GetRawValue(), m_spellInfo->Id);
+
     for (uint32 x = 0; x < MAX_SPELL_REAGENTS; ++x)
     {
         if (m_spellInfo->Reagent[x] <= 0)
@@ -5080,6 +5084,14 @@ void Spell::TakeReagents()
 
         uint32 itemid = m_spellInfo->Reagent[x];
         uint32 itemcount = m_spellInfo->ReagentCount[x];
+
+        // Apply quality-specific reagent count override
+        if (selectedQuality > 0)
+        {
+            uint32 overrideCount = sSpellMgr->GetSpellQualityReagentCount(m_spellInfo->Id, selectedQuality, static_cast<uint8>(x));
+            if (overrideCount > 0)
+                itemcount = overrideCount;
+        }
 
         // if CastItem is also spell reagent
         if (castItemTemplate && castItemTemplate->ItemId == itemid)
@@ -5131,8 +5143,6 @@ void Spell::TakeReagents()
         p_caster->DestroyItemCount(itemid, itemcount, true);
 
         // Determine output from the player's explicitly selected quality tier
-        uint8 selectedQuality = sSpellMgr->GetCraftQuality(
-            p_caster->GetGUID().GetRawValue(), m_spellInfo->Id);
         if (selectedQuality > 0)
         {
             if (uint32 qualityOutput = sSpellMgr->GetSpellQualityOutput(m_spellInfo->Id, selectedQuality))
@@ -6849,6 +6859,10 @@ SpellCastResult Spell::CheckItems(uint32* param1 /*= nullptr*/, uint32* param2 /
         // check reagents (ignore triggered spells with reagents processed by original spell) and special reagent ignore case.
         if (checkReagents)
         {
+            // Determine the player's selected quality for reagent count overrides
+            uint8 selectedQuality = sSpellMgr->GetCraftQuality(
+                player->GetGUID().GetRawValue(), m_spellInfo->Id);
+
             for (uint32 i = 0; i < MAX_SPELL_REAGENTS; i++)
             {
                 if (m_spellInfo->Reagent[i] <= 0)
@@ -6856,6 +6870,14 @@ SpellCastResult Spell::CheckItems(uint32* param1 /*= nullptr*/, uint32* param2 /
 
                 uint32 itemid    = m_spellInfo->Reagent[i];
                 uint32 itemcount = m_spellInfo->ReagentCount[i];
+
+                // Apply quality-specific reagent count override
+                if (selectedQuality > 0)
+                {
+                    uint32 overrideCount = sSpellMgr->GetSpellQualityReagentCount(m_spellInfo->Id, selectedQuality, static_cast<uint8>(i));
+                    if (overrideCount > 0)
+                        itemcount = overrideCount;
+                }
 
                 // if CastItem is also spell reagent
                 if (m_CastItem && m_CastItem->GetEntry() == itemid)

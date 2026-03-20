@@ -1979,6 +1979,9 @@ void World::SetInitialWorldSettings()
     TC_LOG_INFO("server.loading", "Loading spell quality outputs...");
     sSpellMgr->LoadSpellQualityOutputs();
 
+    TC_LOG_INFO("server.loading", "Loading spell quality reagent counts...");
+    sSpellMgr->LoadSpellQualityReagentCounts();
+
     TC_LOG_INFO("server.loading", "Loading Player Create Data...");
     sObjectMgr->LoadPlayerInfo();
 
