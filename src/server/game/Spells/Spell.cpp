@@ -5129,15 +5129,17 @@ void Spell::TakeReagents()
         }
 
         p_caster->DestroyItemCount(itemid, itemcount, true);
+    }
 
-        // Determine output from the player's explicitly selected quality tier
-        uint8 selectedQuality = sSpellMgr->GetCraftQuality(
-            p_caster->GetGUID().GetRawValue(), m_spellInfo->Id);
-        if (selectedQuality > 0)
-        {
-            if (uint32 qualityOutput = sSpellMgr->GetSpellQualityOutput(m_spellInfo->Id, selectedQuality))
-                m_overrideCreateItemId = qualityOutput;
-        }
+    // Determine output from the player's explicitly selected quality tier.
+    // This runs once after all reagents are consumed so it correctly takes
+    // priority over the per-reagent variant-based detection above.
+    uint8 selectedQuality = sSpellMgr->GetCraftQuality(
+        p_caster->GetGUID().GetRawValue(), m_spellInfo->Id);
+    if (selectedQuality > 0)
+    {
+        if (uint32 qualityOutput = sSpellMgr->GetSpellQualityOutput(m_spellInfo->Id, selectedQuality))
+            m_overrideCreateItemId = qualityOutput;
     }
 }
 

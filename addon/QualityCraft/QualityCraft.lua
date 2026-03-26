@@ -219,6 +219,7 @@ local function SendSelectionToServer(spellId)
     if not tradeIndex or tradeIndex == 0 then return end
 
     local selQ = GetSelectedQuality(spellId)
+    if not selQ then return end
     local numReagents = GetTradeSkillNumReagents(tradeIndex)
     local parts = {}
 
@@ -901,10 +902,12 @@ mainFrame:SetScript("OnEvent", function(self, event, ...)
 
     elseif event == "UNIT_SPELLCAST_FAILED"
         or event == "UNIT_SPELLCAST_INTERRUPTED" then
-        local unit = ...
+        local unit, spellName = ...
         if unit == "player" and pendingCraftSpellId then
-            pendingCraftCount   = 0
-            pendingCraftSpellId = nil
+            if spellName == GetSpellInfo(pendingCraftSpellId) then
+                pendingCraftCount   = 0
+                pendingCraftSpellId = nil
+            end
         end
     end
 end)
