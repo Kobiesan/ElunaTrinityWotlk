@@ -203,7 +203,6 @@ private:
     }
 
     // ---- SYNC: send family + output tables to the client ----
-        // ---- SYNC: send family + output tables to the client ----
     static constexpr size_t ADDON_MSG_MAX = 250; // safe margin under 255
 
     // Push item data to the client so GetItemInfo() works immediately
