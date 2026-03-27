@@ -1575,6 +1575,14 @@ void World::LoadConfigSettings(bool reload)
     // Specifies if IP addresses can be logged to the database
     m_bool_configs[CONFIG_ALLOW_LOGGING_IP_ADDRESSES_IN_DATABASE] = sConfigMgr->GetBoolDefault("AllowLoggingIPAddressesInDatabase", true, true);
 
+    // QualityCraft: maximum quality tier players may select (0 = Poor .. 5 = Legendary, default 5)
+    m_int_configs[CONFIG_QUALITY_CRAFT_MAX_QUALITY] = sConfigMgr->GetIntDefault("QualityCraft.MaxQuality", 5);
+    if (int32(m_int_configs[CONFIG_QUALITY_CRAFT_MAX_QUALITY]) < 0 || m_int_configs[CONFIG_QUALITY_CRAFT_MAX_QUALITY] > 5)
+    {
+        TC_LOG_ERROR("server.loading", "QualityCraft.MaxQuality ({}) must be in range 0..5. Set to 5.", m_int_configs[CONFIG_QUALITY_CRAFT_MAX_QUALITY]);
+        m_int_configs[CONFIG_QUALITY_CRAFT_MAX_QUALITY] = 5;
+    }
+
     // call ScriptMgr if we're reloading the configuration
     if (reload)
         sScriptMgr->OnConfigLoad(reload);

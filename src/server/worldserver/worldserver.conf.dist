@@ -4257,3 +4257,19 @@ Metric.OverallStatusInterval = 1
 
 #
 ###################################################################################################
+
+###################################################################################################
+#
+#  QUALITY CRAFT SETTINGS
+#
+#    QualityCraft.MaxQuality
+#        Description: Maximum quality tier players may select when crafting.
+#                     0 = Poor (Grey), 1 = Common (White), 2 = Uncommon (Green),
+#                     3 = Rare (Blue), 4 = Epic (Purple), 5 = Legendary (Orange).
+#        Default:     5  (no restriction)
+#
+
+QualityCraft.MaxQuality = 5
+
+#
+###################################################################################################

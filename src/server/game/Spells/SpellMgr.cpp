@@ -16,6 +16,7 @@
  */
 
 #include "SpellMgr.h"
+#include "World.h"
 #include "BattlefieldMgr.h"
 #include "BattlegroundMgr.h"
 #include "Chat.h"
@@ -5282,6 +5283,9 @@ uint32 SpellMgr::GetSpellQualityOutput(uint32 spellId, uint8 quality) const
 
 void SpellMgr::SetCraftQuality(uint64 playerGuid, uint32 spellId, uint8 quality)
 {
+    uint8 maxQuality = static_cast<uint8>(sWorld->getIntConfig(CONFIG_QUALITY_CRAFT_MAX_QUALITY));
+    if (quality > maxQuality)
+        quality = maxQuality;
     mCraftQuality[playerGuid][spellId] = quality;
 }
 
