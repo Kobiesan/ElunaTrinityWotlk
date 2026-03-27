@@ -2489,6 +2489,13 @@ SpellMissInfo WorldObject::MagicSpellHitResult(Unit* victim, SpellInfo const* sp
         thisLevel = std::max<int32>(thisLevel, spellInfo->SpellLevel);
     int32 leveldif = int32(victim->GetLevelForTarget(this)) - thisLevel;
 
+    // Clamp level difference for PvE: treat mob as at most 3 levels above player
+    if (Unit const* unitCaster = ToUnit())
+    {
+        if ((unitCaster->GetTypeId() == TYPEID_PLAYER || unitCaster->IsPet()) && victim->GetTypeId() == TYPEID_UNIT && !victim->IsPet())
+            leveldif = std::min(leveldif, 3);
+    }
+
     // Base hit chance from attacker and victim levels
     int32 modHitChance;
     if (leveldif < 3)
