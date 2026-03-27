@@ -54,6 +54,10 @@
 #include "World.h"
 #include <G3D/Vector3.h>
 
+// Maximum effective level difference for PvE combat calculations.
+// Treats any mob as at most this many levels above the player for combat formulas.
+static constexpr int32 MAX_PVE_LEVEL_DIFF = 3;
+
 constexpr float VisibilityDistances[AsUnderlyingType(VisibilityDistanceType::Max)] =
 {
     DEFAULT_VISIBILITY_DISTANCE,
@@ -2493,7 +2497,7 @@ SpellMissInfo WorldObject::MagicSpellHitResult(Unit* victim, SpellInfo const* sp
     if (Unit const* unitCaster = ToUnit())
     {
         if ((unitCaster->GetTypeId() == TYPEID_PLAYER || unitCaster->IsPet()) && victim->GetTypeId() == TYPEID_UNIT && !victim->IsPet())
-            leveldif = std::min(leveldif, 3);
+            leveldif = std::min(leveldif, MAX_PVE_LEVEL_DIFF);
     }
 
     // Base hit chance from attacker and victim levels
