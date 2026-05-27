@@ -802,7 +802,7 @@ local function TryHookBlizzardUI()
         end
         pendingCraftSpellId = sid
         pendingCraftCount   = count
-        SendAddonMessage(ADDON_PREFIX, "CRAFT|" .. sid .. "|",
+        SendAddonMessage(ADDON_PREFIX, "CRAFT|" .. sid,
                          "WHISPER", UnitName("player"))
     end)
 
@@ -815,7 +815,7 @@ local function TryHookBlizzardUI()
         pendingCraftSpellId = sid
         pendingCraftCount   = count
         TradeSkillInputBox:SetNumber(count)
-        SendAddonMessage(ADDON_PREFIX, "CRAFT|" .. sid .. "|",
+        SendAddonMessage(ADDON_PREFIX, "CRAFT|" .. sid,
                          "WHISPER", UnitName("player"))
     end)
 
@@ -896,7 +896,7 @@ mainFrame:SetScript("OnEvent", function(self, event, ...)
                 end
                 if pendingCraftCount > 0 then
                     SendAddonMessage(ADDON_PREFIX,
-                        "CRAFT|" .. pendingCraftSpellId .. "|",
+                        "CRAFT|" .. pendingCraftSpellId,
                         "WHISPER", UnitName("player"))
                 else
                     pendingCraftSpellId = nil
