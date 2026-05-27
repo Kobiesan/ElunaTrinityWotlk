@@ -219,6 +219,11 @@ local function SendSelectionToServer(spellId)
     if not tradeIndex or tradeIndex == 0 then return end
 
     local selQ = GetSelectedQuality(spellId)
+    if not selQ then
+        SendAddonMessage(ADDON_PREFIX, "CLR|" .. spellId,
+                         "WHISPER", UnitName("player"))
+        return
+    end
     local numReagents = GetTradeSkillNumReagents(tradeIndex)
     local parts = {}
 
@@ -797,7 +802,7 @@ local function TryHookBlizzardUI()
         end
         pendingCraftSpellId = sid
         pendingCraftCount   = count
-        SendAddonMessage(ADDON_PREFIX, "CRAFT|" .. sid .. "|1",
+        SendAddonMessage(ADDON_PREFIX, "CRAFT|" .. sid .. "|",
                          "WHISPER", UnitName("player"))
     end)
 
@@ -810,7 +815,7 @@ local function TryHookBlizzardUI()
         pendingCraftSpellId = sid
         pendingCraftCount   = count
         TradeSkillInputBox:SetNumber(count)
-        SendAddonMessage(ADDON_PREFIX, "CRAFT|" .. sid .. "|1",
+        SendAddonMessage(ADDON_PREFIX, "CRAFT|" .. sid .. "|",
                          "WHISPER", UnitName("player"))
     end)
 
@@ -891,7 +896,7 @@ mainFrame:SetScript("OnEvent", function(self, event, ...)
                 end
                 if pendingCraftCount > 0 then
                     SendAddonMessage(ADDON_PREFIX,
-                        "CRAFT|" .. pendingCraftSpellId .. "|1",
+                        "CRAFT|" .. pendingCraftSpellId .. "|",
                         "WHISPER", UnitName("player"))
                 else
                     pendingCraftSpellId = nil

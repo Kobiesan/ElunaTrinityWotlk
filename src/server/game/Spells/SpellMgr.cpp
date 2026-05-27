@@ -5292,3 +5292,12 @@ uint8 SpellMgr::GetCraftQuality(uint64 playerGuid, uint32 spellId) const
     auto sItr = pItr->second.find(spellId);
     return sItr != pItr->second.end() ? sItr->second : 0;
 }
+
+uint32 SpellMgr::GetItemFamilyId(uint32 itemId) const
+{
+    for (auto const& [familyId, qualityMap] : GetItemQualityFamilyByQuality())
+        for (auto const& [quality, id] : qualityMap)
+            if (id == itemId)
+                return familyId;
+    return 0;
+}

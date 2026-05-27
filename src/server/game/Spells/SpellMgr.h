@@ -717,6 +717,7 @@ class TC_GAME_API SpellMgr
         uint8  GetItemFamilyQuality(uint32 itemId) const;
         bool   AreInSameFamily(uint32 itemId1, uint32 itemId2) const;
         uint32 GetSpellQualityOutput(uint32 spellId, uint8 quality) const;
+        uint32 GetItemFamilyId(uint32 itemId) const;
 
         // --- Accessors for QualityCraft client sync (SYNC command) ---
         auto const& GetItemQualityFamilyByQuality() const { return mItemQualityFamilyByQuality; }

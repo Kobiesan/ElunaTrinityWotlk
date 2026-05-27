@@ -7,8 +7,9 @@
  *
  * Message protocol (prefix "QCRAFT", sent as a self-whisper with LANG_ADDON):
  *
- *   SEL|<spellId>|<slot0ItemId>,<slot1ItemId>,...,<slot7ItemId>
- *     - Stores quality preferences for a specific spell.
+ *   SEL|<spellId>|<quality>|<slot0ItemId>,<slot1ItemId>,...,<slot7ItemId>
+ *     - Stores the chosen output quality and per-slot reagent preferences.
+ *     - Server rejects slot itemIds that aren't in the reagent's quality family.
  *
  *   CLR|<spellId>
  *     - Clears all stored preferences for a specific spell.
@@ -31,6 +32,8 @@
 #include "WorldSession.h"
 #include "World.h"
 #include <unordered_set>
+#include <charconv>
+#include <optional>
 
 namespace
 {
@@ -40,7 +43,7 @@ constexpr std::string_view CLR_CMD       = "CLR";
 constexpr std::string_view SYNC_CMD      = "SYNC";
 constexpr std::string_view CRAFT_CMD     = "CRAFT";
 
-static Optional<uint32> StringToUInt32(std::string_view str)
+Optional<uint32> StringToUInt32(std::string_view str)
 {
     if (str.empty())
         return std::nullopt;
@@ -56,7 +59,7 @@ static Optional<uint32> StringToUInt32(std::string_view str)
 
 // Send a QCRAFT addon message from server to client.
 // The client sees this as a CHAT_MSG_ADDON event with prefix "QCRAFT".
-static void SendAddonWhisper(Player* player, std::string const& payload)
+void SendAddonWhisper(Player* player, std::string const& payload)
 {
     // Addon messages are whispers with LANG_ADDON; body = "PREFIX\tPAYLOAD"
     std::string fullMsg = std::string(QCRAFT_PREFIX) + "\t" + payload;
@@ -135,6 +138,9 @@ private:
         Optional<uint32> quality = StringToUInt32(payload.substr(pipe1 + 1, pipe2 - pipe1 - 1));
         if (!spellId || !quality) return;
 
+        SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(*spellId);
+        if (!spellInfo) return;
+
         sSpellMgr->SetCraftQuality(playerGuid, *spellId, static_cast<uint8>(*quality));
 
         std::string_view slotsPart = payload.substr(pipe2 + 1);
@@ -142,8 +148,35 @@ private:
         for (std::string_view token : Trinity::Tokenize(slotsPart, ',', false))
         {
             if (slot >= MAX_SPELL_REAGENTS) break;
-            if (Optional<uint32> itemId = StringToUInt32(token))
-                sSpellMgr->SetCraftPreference(playerGuid, *spellId, slot, *itemId);
+
+            Optional<uint32> itemId = StringToUInt32(token);
+            if (!itemId)
+            {
+                ++slot;
+                continue;
+            }
+
+            int32 reagentId = spellInfo->Reagent[slot];
+            if (reagentId <= 0)
+            {
+                ++slot;
+                continue;
+            }
+
+            // Accept the exact reagent OR any item in the same quality family.
+            // Reject anything else ? clients shouldn't be picking arbitrary itemIds.
+            if (static_cast<int32>(*itemId) != reagentId)
+            {
+                uint32 reagentFamily = sSpellMgr->GetItemFamilyId(static_cast<uint32>(reagentId));
+                uint32 chosenFamily = sSpellMgr->GetItemFamilyId(*itemId);
+                if (reagentFamily == 0 || reagentFamily != chosenFamily)
+                {
+                    ++slot;
+                    continue; // silently drop invalid choice
+                }
+            }
+
+            sSpellMgr->SetCraftPreference(playerGuid, *spellId, slot, *itemId);
             ++slot;
         }
     }
@@ -157,12 +190,8 @@ private:
     // ---- CRAFT: server-initiated casting ----
     static void HandleCraft(Player* player, std::string_view payload)
     {
-        // payload = "<spellId>|<count>" (count is always 1, sent by client)
-        auto pipePos = payload.find('|');
-        if (pipePos == std::string::npos)
-            return;
-
-        Optional<uint32> spellId = StringToUInt32(payload.substr(0, pipePos));
+        // payload = "<spellId>"
+        Optional<uint32> spellId = StringToUInt32(payload);
         if (!spellId)
             return;
 
@@ -203,8 +232,7 @@ private:
     }
 
     // ---- SYNC: send family + output tables to the client ----
-        // ---- SYNC: send family + output tables to the client ----
-    static constexpr size_t ADDON_MSG_MAX = 250; // safe margin under 255
+    static constexpr size_t ADDON_MSG_MAX = 240; // 255 - "QCRAFT\t" (7) - safety margin
 
     // Push item data to the client so GetItemInfo() works immediately
     static void PushItemDataToClient(Player* player, uint32 itemId)
@@ -242,15 +270,24 @@ private:
         // Send one "F|<familyId>|<q>:<itemId>,..." message per family
         for (auto const& [familyId, qualityMap] : sSpellMgr->GetItemQualityFamilyByQuality())
         {
-            std::string payload = "F|" + std::to_string(familyId) + "|";
+            std::string const header = "F|" + std::to_string(familyId) + "|";
+            std::string payload = header;
             bool first = true;
             for (auto const& [quality, itemId] : qualityMap)
             {
+                std::string entry = std::to_string(quality) + ':' + std::to_string(itemId);
+                if (!first && payload.size() + 1 + entry.size() > ADDON_MSG_MAX)
+                {
+                    SendAddonWhisper(player, payload);
+                    payload = header;
+                    first = true;
+                }
                 if (!first) payload += ',';
-                payload += std::to_string(quality) + ':' + std::to_string(itemId);
+                payload += entry;
                 first = false;
             }
-            SendAddonWhisper(player, payload);
+            if (payload.size() > header.size())
+                SendAddonWhisper(player, payload);
         }
 
         // Send spell quality outputs as "O|<spellId>:<q>:<itemId>;..."
