@@ -16,7 +16,7 @@ local function Send(player, msg)
         print("[QualityCraft] Warning: message too long (" .. #msg .. " bytes): " .. msg:sub(1, 60))
         return
     end
-    player:SendAddonMessage(ADDON_PREFIX, msg, "WHISPER", player)
+    player:SendAddonMessage(ADDON_PREFIX, msg, 7, player)
 end
 
 local function OnLogin(event, player)
