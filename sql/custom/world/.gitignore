@@ -1,1 +1,2 @@
 *.sql
+!npc_skill_requirements.sql
