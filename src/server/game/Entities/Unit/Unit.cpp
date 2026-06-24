@@ -84,6 +84,12 @@
 #include "WorldSession.h"
 #include <cmath>
 
+// Maximum effective level difference for PvE combat calculations.
+// Treats any mob as at most this many levels above the player for combat formulas.
+static constexpr int32 MAX_PVE_LEVEL_DIFF = 3;
+// Equivalent skill point difference (5 skill points per level).
+static constexpr int32 MAX_PVE_SKILL_DIFF = MAX_PVE_LEVEL_DIFF * 5;
+
 float baseMoveSpeed[MAX_MOVE_TYPE] =
 {
     2.5f,                  // MOVE_WALK
@@ -1746,7 +1752,16 @@ void Unit::HandleEmoteCommand(Emote emoteId)
     // level-based resistance does not apply to binary spells, and cannot be overcome by spell penetration
     // gameobject caster -- should it have level based resistance?
     if (caster && caster->GetTypeId() != TYPEID_GAMEOBJECT && (!spellInfo || !spellInfo->HasAttribute(SPELL_ATTR0_CU_BINARY_SPELL)))
-        victimResistance += std::max((float(victim->GetLevelForTarget(caster)) - float(caster->GetLevelForTarget(victim))) * 5.0f, 0.0f);
+    {
+        float levelDiffForResist = float(victim->GetLevelForTarget(caster)) - float(caster->GetLevelForTarget(victim));
+        // Clamp level difference for PvE: treat mob as at most 3 levels above player
+        if (Unit const* unitCaster = caster->ToUnit())
+        {
+            if ((unitCaster->GetTypeId() == TYPEID_PLAYER || unitCaster->IsPet()) && victim->GetTypeId() == TYPEID_UNIT && !victim->IsPet())
+                levelDiffForResist = std::min(levelDiffForResist, float(MAX_PVE_LEVEL_DIFF));
+        }
+        victimResistance += std::max(levelDiffForResist * 5.0f, 0.0f);
+    }
 
     static uint32 const BOSS_LEVEL = 83;
     static float const BOSS_RESISTANCE_CONSTANT = 510.0f;
@@ -2150,7 +2165,11 @@ MeleeHitOutcome Unit::RollMeleeOutcomeAgainst(Unit const* victim, WeaponAttackTy
     int32 const victimDefenseSkill = victim->GetDefenseSkillValue(this);
 
     // Miss chance based on melee
-    int32 miss_chance = int32(MeleeSpellMissChance(victim, attType, attackerWeaponSkill - victimMaxSkillValueForLevel, 0) * 100.0f);
+    // Clamp skill difference for PvE: treat mob as at most 3 levels above player for miss calculation
+    int32 missSkillDiff = attackerWeaponSkill - victimMaxSkillValueForLevel;
+    if ((GetTypeId() == TYPEID_PLAYER || IsPet()) && victim->GetTypeId() == TYPEID_UNIT && !victim->IsPet())
+        missSkillDiff = std::max(missSkillDiff, -MAX_PVE_SKILL_DIFF);
+    int32 miss_chance = int32(MeleeSpellMissChance(victim, attType, missSkillDiff, 0) * 100.0f);
 
     // Critical hit chance
     int32 crit_chance = int32(GetUnitCriticalChanceAgainst(attType, victim) * 100.0f);
@@ -2220,7 +2239,10 @@ MeleeHitOutcome Unit::RollMeleeOutcomeAgainst(Unit const* victim, WeaponAttackTy
 
         // against boss-level targets - 24% chance of 25% average damage reduction (damage reduction range : 20-30%)
         // against level 82 elites - 18% chance of 15% average damage reduction (damage reduction range : 10-20%)
-        tmp = 600 + (victimDefenseSkill - skill) * 120;
+        // Clamp skill difference for PvE (this block is already PvE-only due to the outer if condition)
+        int32 glancingSkillDiff = victimDefenseSkill - skill;
+        glancingSkillDiff = std::min(glancingSkillDiff, MAX_PVE_SKILL_DIFF);
+        tmp = 600 + glancingSkillDiff * 120;
         tmp = std::min(tmp, 4000);
         if (tmp > 0 && roll < (sum += tmp))
             return MELEE_HIT_GLANCING;
@@ -2241,26 +2263,9 @@ MeleeHitOutcome Unit::RollMeleeOutcomeAgainst(Unit const* victim, WeaponAttackTy
         return MELEE_HIT_CRIT;
 
     // 7. CRUSHING
-    // mobs can score crushing blows if they're 4 or more levels above victim
-    if (GetLevelForTarget(victim) >= victim->GetLevelForTarget(this) + 4 &&
-        // can be from by creature (if can) or from controlled player that considered as creature
-        !IsControlledByPlayer() &&
-        !(GetTypeId() == TYPEID_UNIT && ToCreature()->GetCreatureTemplate()->flags_extra & CREATURE_FLAG_EXTRA_NO_CRUSHING_BLOWS))
-    {
-        // when their weapon skill is 15 or more above victim's defense skill
-        tmp = victimDefenseSkill;
-        // having defense above your maximum (from items, talents etc.) has no effect
-        tmp = std::min(tmp, victimMaxSkillValueForLevel);
-        // tmp = mob's level * 5 - player's current defense skill
-        tmp = attackerMaxSkillValueForLevel - tmp;
-        // minimum of 20 points diff (4 levels difference)
-        tmp = std::max(tmp, 20);
-
-        // add 2% chance per lacking skill point
-        tmp = tmp * 200 - 1500;
-        if (tmp > 0 && roll < (sum += tmp))
-            return MELEE_HIT_CRUSHING;
-    }
+    // Crushing blows disabled: level/skill difference is clamped to 3 levels,
+    // so the 4+ level requirement can never be met.
+    // Original behavior required mobs to be 4+ levels above victim.
 
     // 8. HIT
     return MELEE_HIT_NORMAL;
@@ -2584,10 +2589,15 @@ float Unit::GetUnitDodgeChance(WeaponAttackType attType, Unit const* victim) con
             chance = 5.0f;
             chance += victim->GetTotalAuraModifier(SPELL_AURA_MOD_DODGE_PERCENT);
 
-            if (skillDiff <= 10)
-                skillBonus = skillDiff * 0.1f;
+            // Clamp skill difference for PvE: treat mob as at most 3 levels above player
+            int32 effectiveSkillDiff = skillDiff;
+            if (GetTypeId() == TYPEID_PLAYER || IsPet())
+                effectiveSkillDiff = std::min(skillDiff, MAX_PVE_SKILL_DIFF);
+
+            if (effectiveSkillDiff <= 10)
+                skillBonus = effectiveSkillDiff * 0.1f;
             else
-                skillBonus = 1.0f + (skillDiff - 10) * 0.1f;
+                skillBonus = 1.0f + (effectiveSkillDiff - 10) * 0.1f;
         }
     }
 
@@ -2636,10 +2646,15 @@ float Unit::GetUnitParryChance(WeaponAttackType attType, Unit const* victim) con
             chance = 5.0f;
             chance += victim->GetTotalAuraModifier(SPELL_AURA_MOD_PARRY_PERCENT);
 
-            if (skillDiff <= 10)
-                skillBonus = skillDiff * 0.1f;
+            // Clamp skill difference for PvE: treat mob as at most 3 levels above player
+            int32 effectiveSkillDiff = skillDiff;
+            if (GetTypeId() == TYPEID_PLAYER || IsPet())
+                effectiveSkillDiff = std::min(skillDiff, MAX_PVE_SKILL_DIFF);
+
+            if (effectiveSkillDiff <= 10)
+                skillBonus = effectiveSkillDiff * 0.1f;
             else
-                skillBonus = 1.0f + (skillDiff - 10) * 1.6f;
+                skillBonus = 1.0f + (effectiveSkillDiff - 10) * 1.6f;
         }
     }
 
@@ -2690,10 +2705,15 @@ float Unit::GetUnitBlockChance(WeaponAttackType attType, Unit const* victim) con
             chance = 5.0f;
             chance += victim->GetTotalAuraModifier(SPELL_AURA_MOD_BLOCK_PERCENT);
 
-            if (skillDiff <= 10)
-                skillBonus = skillDiff * 0.1f;
+            // Clamp skill difference for PvE: treat mob as at most 3 levels above player
+            int32 effectiveSkillDiff = skillDiff;
+            if (GetTypeId() == TYPEID_PLAYER || IsPet())
+                effectiveSkillDiff = std::min(skillDiff, MAX_PVE_SKILL_DIFF);
+
+            if (effectiveSkillDiff <= 10)
+                skillBonus = effectiveSkillDiff * 0.1f;
             else
-                skillBonus = 1.0f + (skillDiff - 10) * 0.1f;
+                skillBonus = 1.0f + (effectiveSkillDiff - 10) * 0.1f;
         }
     }
 
@@ -2740,7 +2760,13 @@ float Unit::GetUnitCriticalChanceTaken(Unit const* attacker, WeaponAttackType at
 {
     int32 const attackerWeaponSkill = attacker->GetWeaponSkillValue(attackType, this);
     int32 const victimDefenseSkill = GetDefenseSkillValue(attacker);
-    int32 const skillDiff = victimDefenseSkill - attackerWeaponSkill;
+    int32 skillDiff = victimDefenseSkill - attackerWeaponSkill;
+
+    // Clamp skill difference for PvE: treat mob as at most 3 levels above player
+    // When a creature attacks a player, a negative skillDiff means the creature has
+    // more weapon skill, giving it a crit bonus. Clamp to limit that bonus.
+    if (GetTypeId() == TYPEID_PLAYER && attacker->GetTypeId() == TYPEID_UNIT && !attacker->IsPet())
+        skillDiff = std::max(skillDiff, -MAX_PVE_SKILL_DIFF);
 
     float skillBonus = 0.0f;
     float chance = critDone;
@@ -12088,6 +12114,10 @@ float Unit::MeleeSpellMissChance(Unit const* victim, WeaponAttackType attType, i
     SpellInfo const* spellInfo = spellId ? sSpellMgr->GetSpellInfo(spellId) : nullptr;
     if (spellInfo && spellInfo->HasAttribute(SPELL_ATTR7_CANT_MISS))
         return 0.f;
+
+    // Clamp skill difference for PvE: treat mob as at most 3 levels above player
+    if ((GetTypeId() == TYPEID_PLAYER || IsPet()) && victim->GetTypeId() == TYPEID_UNIT && !victim->IsPet())
+        skillDiff = std::max(skillDiff, -MAX_PVE_SKILL_DIFF);
 
     //calculate miss chance
     float missChance = victim->GetUnitMissChance();
