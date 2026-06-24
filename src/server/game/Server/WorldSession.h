@@ -410,6 +410,7 @@ class CharacterCreateInfo
 
         /// Server side data
         uint8 CharCount = 0;
+        bool ClassUnlockedByMaxLevel = false; // True if this race/class combo is unlocked by having a max-level char of this class
 };
 
 struct CharacterRenameInfo

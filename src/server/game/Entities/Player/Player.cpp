@@ -396,9 +396,17 @@ bool Player::Create(ObjectGuid::LowType guidlow, CharacterCreateInfo* createInfo
     PlayerInfo const* info = sObjectMgr->GetPlayerInfo(createInfo->Race, createInfo->Class);
     if (!info)
     {
-        TC_LOG_ERROR("entities.player.cheat", "Player::Create: Possible hacking attempt: Account {} tried to create a character named '{}' with an invalid race/class pair ({}/{}) - refusing to do so.",
-                GetSession()->GetAccountId(), m_name, createInfo->Race, createInfo->Class);
-        return false;
+        // If the class was unlocked by reaching max level, use fallback PlayerInfo for the race
+        if (createInfo->ClassUnlockedByMaxLevel)
+        {
+            info = sObjectMgr->GetPlayerInfoForRace(createInfo->Race);
+        }
+        if (!info)
+        {
+            TC_LOG_ERROR("entities.player.cheat", "Player::Create: Possible hacking attempt: Account {} tried to create a character named '{}' with an invalid race/class pair ({}/{}) - refusing to do so.",
+                    GetSession()->GetAccountId(), m_name, createInfo->Race, createInfo->Class);
+            return false;
+        }
     }
 
     for (uint8 i = 0; i < PLAYER_SLOTS_COUNT; i++)
@@ -1323,6 +1331,11 @@ bool Player::BuildEnumData(PreparedQueryResult result, WorldPacket* data)
     uint8 gender = fields[4].GetUInt8();
 
     PlayerInfo const* info = sObjectMgr->GetPlayerInfo(playerRace, playerClass);
+    if (!info)
+    {
+        // Try fallback for unlocked race/class combos
+        info = sObjectMgr->GetPlayerInfoForRace(playerRace);
+    }
     if (!info)
     {
         TC_LOG_ERROR("entities.player.loading", "Player {} has incorrect race/class pair. Don't build enum.", guid);
@@ -17737,6 +17750,11 @@ bool Player::LoadFromDB(ObjectGuid guid, CharacterDatabaseQueryHolder const& hol
     PlayerInfo const* info = sObjectMgr->GetPlayerInfo(GetRace(), GetClass());
     if (!info)
     {
+        // Try fallback for unlocked race/class combos
+        info = sObjectMgr->GetPlayerInfoForRace(GetRace());
+    }
+    if (!info)
+    {
         TC_LOG_ERROR("entities.player.loading", "Player::LoadFromDB: Player ({}) has wrong race/class ({}/{}), can't load.", guid.ToString(), GetRace(), GetClass());
         return false;
     }
@@ -19715,6 +19733,11 @@ bool Player::CheckInstanceValidity(bool /*isLogin*/)
 bool Player::_LoadHomeBind(PreparedQueryResult result)
 {
     PlayerInfo const* info = sObjectMgr->GetPlayerInfo(GetRace(), GetClass());
+    if (!info)
+    {
+        // Try fallback for unlocked race/class combos
+        info = sObjectMgr->GetPlayerInfoForRace(GetRace());
+    }
     if (!info)
     {
         TC_LOG_ERROR("entities.player", "Player::_LoadHomeBind: Player '{}' ({}) has incorrect race/class ({}/{}) pair. Can't load.",
@@ -22258,6 +22281,11 @@ void Player::InitDisplayIds()
     PlayerInfo const* info = sObjectMgr->GetPlayerInfo(GetRace(), GetClass());
     if (!info)
     {
+        // Try fallback for unlocked race/class combos
+        info = sObjectMgr->GetPlayerInfoForRace(GetRace());
+    }
+    if (!info)
+    {
         TC_LOG_ERROR("entities.player", "Player::InitDisplayIds: Player '{}' ({}) has incorrect race/class pair. Can't init display ids.", GetName(), GetGUID().ToString());
         return;
     }
@@ -23001,6 +23029,11 @@ uint8 Player::GetStartLevel(uint8 playerClass) const
 WorldLocation Player::GetStartPosition() const
 {
     PlayerInfo const* info = sObjectMgr->GetPlayerInfo(GetRace(), GetClass());
+    if (!info)
+    {
+        // Try fallback for unlocked race/class combos
+        info = sObjectMgr->GetPlayerInfoForRace(GetRace());
+    }
     ASSERT(info);
     uint32 mapId = info->mapId;
     if (GetClass() == CLASS_DEATH_KNIGHT && HasSpell(50977))
@@ -23679,6 +23712,11 @@ void Player::LearnCustomSpells()
 
     // learn default race/class spells
     PlayerInfo const* info = sObjectMgr->GetPlayerInfo(GetRace(), GetClass());
+    if (!info)
+    {
+        // Try fallback for unlocked race/class combos
+        info = sObjectMgr->GetPlayerInfoForRace(GetRace());
+    }
     ASSERT(info);
     for (PlayerCreateInfoSpells::const_iterator itr = info->customSpells.begin(); itr != info->customSpells.end(); ++itr)
     {
@@ -23696,6 +23734,11 @@ void Player::LearnDefaultSkills()
 {
     // learn default race/class skills
     PlayerInfo const* info = sObjectMgr->GetPlayerInfo(GetRace(), GetClass());
+    if (!info)
+    {
+        // Try fallback for unlocked race/class combos
+        info = sObjectMgr->GetPlayerInfoForRace(GetRace());
+    }
     ASSERT(info);
     for (PlayerCreateInfoSkills::const_iterator itr = info->skills.begin(); itr != info->skills.end(); ++itr)
     {
